@@ -23,6 +23,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/usuario/usuario-list/usuario-list.component').then(m => m.UsuarioListComponent)
   },
   {
+    path: 'estudiantes',
+    loadComponent: () => import('./features/estudiante/estudiante-list/estudiante-list.component').then(m => m.EstudianteListComponent)
+  },
+  {
+    path: 'profesores',
+    loadComponent: () => import('./features/profesor/profesor-list/profesor-list.component').then(m => m.ProfesorListComponent)
+  },
+  {
+    path: 'notas',
+    loadComponent: () => import('./features/notas/notas-list/notas-list.component').then(m => m.NotasListComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
   },
