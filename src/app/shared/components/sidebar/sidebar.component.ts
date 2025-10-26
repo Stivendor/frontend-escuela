@@ -16,6 +16,10 @@ export const ROUTES: RouteInfo[] = [
     { path: '/estudiantes', title: 'Estudiantes',  icon:'users_single-02', class: '' },
     { path: '/profesores', title: 'Profesores',  icon:'users_single-02', class: '' },
     { path: '/notas', title: 'Notas',  icon:'shopping_box', class: '' },
+    { path: '/materias', title: 'Materia',  icon:'shopping_box', class: '' },
+    { path: '/grupos', title: 'Grupo',  icon:'shopping_box', class: '' },
+    { path: '/periodos', title: 'Periodo',  icon:'users_single-02', class: '' },
+        { path: '/auditorias', title: 'Auditoria',  icon:'users_single-02', class: '' },
     { path: '/productos', title: 'Productos',  icon:'shopping_box', class: '' },
     { path: '/notifications', title: 'Notificaciones',  icon:'ui-1_bell-53', class: '' },
     { path: '/upgrade', title: 'Configuración',  icon:'objects_spaceship', class: 'active active-pro' }
