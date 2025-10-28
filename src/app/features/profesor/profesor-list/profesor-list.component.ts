@@ -1,0 +1,197 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { PaginationParams } from '../../../core/models/api-response.model';
+import { ProfesorService } from '../../../core/services/profesor.service';
+
+@Component({
+  selector: 'app-profesor-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './profesor-list.component.html',
+  styleUrls: ['./profesor-list.component.scss']
+})
+export class ProfesorListComponent implements OnInit {
+  profesores: any[] = [];
+  loading = false;
+  currentPage = 1;
+  totalPages = 1;
+  pageSize = 10;
+
+  filters: any = {};
+
+  // Modal properties
+  showModal = false;
+  editingProfesor: any | null = null;
+  profesorForm = {
+    nombre: '',
+    especialidad: '',
+    email: '',
+    telefono: '',
+    activo: true
+  };
+
+  constructor(private profesorService: ProfesorService) {}
+
+  ngOnInit(): void {
+    // Dato de prueba temporal
+    this.profesores = [
+      {
+        id: 1,
+        nombre: 'Juan Pérez',
+        especialidad: 'Matemáticas',
+        email: 'juan.perez@example.com',
+        telefono: '3001234567',
+        activo: true,
+        fecha_creacion: new Date().toISOString()
+      }
+    ];
+    this.totalPages = 1;
+    // this.loadProfesores();
+  }
+
+  loadProfesores(): void {
+    this.loading = true;
+    const pagination: PaginationParams = {
+      page: this.currentPage,
+      limit: this.pageSize
+    };
+
+    // 🚨 Cambia a profesorService cuando lo tengas listo
+    this.profesorService.getProfesores(pagination, this.filters).subscribe({
+      next: (response) => {
+        this.profesores = response.data;
+        this.totalPages = response.totalPages;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar profesores:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadProfesores();
+  }
+
+  clearFilters(): void {
+    this.filters = {};
+    this.currentPage = 1;
+    this.loadProfesores();
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadProfesores();
+    }
+  }
+
+  openCreateModal(): void {
+    this.editingProfesor = null;
+    this.profesorForm = {
+      nombre: '',
+      especialidad: '',
+      email: '',
+      telefono: '',
+      activo: true
+    };
+    this.showModal = true;
+  }
+
+  editProfesor(profesor: any): void {
+    this.editingProfesor = profesor;
+    this.profesorForm = {
+      nombre: profesor.nombre,
+      especialidad: profesor.especialidad,
+      email: profesor.email,
+      telefono: profesor.telefono,
+      activo: profesor.activo
+    };
+    this.showModal = true;
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.editingProfesor = null;
+    this.profesorForm = {
+      nombre: '',
+      especialidad: '',
+      email: '',
+      telefono: '',
+      activo: true
+    };
+  }
+
+  saveProfesor(): void {
+  if (
+    !this.profesorForm.nombre.trim() ||
+    !this.profesorForm.especialidad.trim() ||
+    !this.profesorForm.email.trim() ||
+    !this.profesorForm.telefono.trim()
+  ) {
+    alert('Todos los campos son requeridos');
+    return;
+  }
+
+  if (this.editingProfesor) {
+    // UPDATE: mapear a la forma del usuario que espera el servicio
+    const payloadUsuario: any = {
+      email: this.profesorForm.email,
+      nombre: this.profesorForm.nombre,
+      // Usamos 'apellido' para guardar la especialidad temporalmente
+      apellido: this.profesorForm.especialidad,
+      activo: this.profesorForm.activo
+      // Nota: telefono no existe en el DTO de usuario original
+    };
+
+    this.profesorService.updateProfesor(this.editingProfesor.id, payloadUsuario).subscribe({
+      next: () => {
+        this.loadProfesores();
+        this.closeModal();
+      },
+      error: (error) => {
+        console.error('Error al actualizar profesor:', error);
+        alert('Error al actualizar el profesor');
+      }
+    });
+  } else {
+    // CREATE: mapear a la forma del usuario y agregar una password temporal
+    const payloadUsuario: any = {
+      email: this.profesorForm.email,
+      nombre: this.profesorForm.nombre,
+      apellido: this.profesorForm.especialidad, // mapeo temporal
+      password: 'Temporal#123',                 // requerida por createUsuario
+      activo: this.profesorForm.activo
+      // telefono no existe en el DTO del usuario original
+    };
+
+    this.profesorService.createProfesor(payloadUsuario).subscribe({
+      next: () => {
+        this.loadProfesores();
+        this.closeModal();
+      },
+      error: (error) => {
+        console.error('Error al crear profesor:', error);
+        alert('Error al crear el profesor');
+      }
+    });
+  }
+}
+
+
+  deleteProfesor(profesor: any): void {
+    if (confirm(`¿Está seguro de eliminar al profesor "${profesor.nombre}"?`)) {
+      this.profesorService.deleteProfesor(profesor.id).subscribe({
+        next: () => {
+          this.loadProfesores();
+        },
+        error: (error) => {
+          console.error('Error al eliminar profesor:', error);
+        }
+      });
+    }
+  }
+}
