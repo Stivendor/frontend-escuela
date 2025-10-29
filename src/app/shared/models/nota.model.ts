@@ -6,6 +6,20 @@ export interface Nota {
   valor: number;
   fecha_creacion: string;
   activo: boolean;
+
+    // Relaciones opcionales
+  estudiante?: {
+    id: number;
+    nombre: string;
+  };
+  profesor?: {
+    id: number;
+    nombre: string;
+  };
+  materia?: {
+    id: number;
+    nombre: string;
+  };
 }
 
 export interface CreateNotaRequest {

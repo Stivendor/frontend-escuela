@@ -44,7 +44,10 @@ export class NotasListComponent implements OnInit {
         profesor_id: 3,
         valor: 4.5,
         activo: true,
-        fecha_creacion: new Date().toISOString()
+        fecha_creacion: new Date().toISOString(),
+        estudiante: { id: 2, nombre: 'María Lopez' },
+        profesor: { id: 3, nombre: 'Juan Pérez' },
+        materia: { id: 1, nombre: 'Matemáticas I' }
       }
     ];
     this.totalPages = 1;

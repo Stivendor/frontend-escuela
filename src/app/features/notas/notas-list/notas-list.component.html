@@ -66,10 +66,10 @@
               <td colspan="7" class="text-center">No hay notas registradas</td>
             </tr>
             <tr *ngFor="let nota of notas">
-              <td>{{ nota.materia_id }}</td>
+              <td>{{ nota.materia?.nombre }}</td>
               <td>{{ nota.valor }}</td>
-              <td>{{ nota.estudiante_id }}</td>
-              <td>{{ nota.profesor_id }}</td>
+              <td>{{ nota.estudiante?.nombre }}</td>
+              <td>{{ nota.profesor?.nombre }}</td>
               <td>{{ nota.fecha_creacion | date:'short' }}</td>
               <td>
                 <span class="badge" [ngClass]="nota.activo ? 'badge-activo' : 'badge-inactivo'">
