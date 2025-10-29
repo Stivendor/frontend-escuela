@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
 import { EstudianteService } from '../../../core/services/estudiante.service';
+import { Estudiante, CreateEstudianteRequest, UpdateEstudianteRequest, EstudianteFilters } from '../../../shared/models/estudiante.model';
 
 @Component({
   selector: 'app-estudiante-list',
@@ -12,18 +13,18 @@ import { EstudianteService } from '../../../core/services/estudiante.service';
   styleUrls: ['./estudiante-list.component.scss']
 })
 export class EstudianteListComponent implements OnInit {
-  estudiantes: any[] = [];
+  estudiantes: Estudiante[] = [];
   loading = false;
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
 
-  filters: any = {};
+  filters: EstudianteFilters = {};
 
   // Modal
   showModal = false;
-  editingEstudiante: any | null = null;
-  estudianteForm = {
+  editingEstudiante: Estudiante | null = null;
+  estudianteForm: CreateEstudianteRequest = {
     nombre: '',
     carrera: '',
     email: '',
@@ -44,7 +45,9 @@ export class EstudianteListComponent implements OnInit {
         email: 'maria.lopez@example.com',
         telefono: '3004567890',
         semestre: 5,
-        activo: true
+        activo: true,
+        fecha_creacion: new Date().toISOString(),
+        fecha_actualizacion: new Date().toISOString()
       }
     ];
     this.totalPages = 1;
@@ -102,7 +105,7 @@ export class EstudianteListComponent implements OnInit {
     this.showModal = true;
   }
 
-  editEstudiante(estudiante: any): void {
+  editEstudiante(estudiante: Estudiante): void {
     this.editingEstudiante = estudiante;
     this.estudianteForm = {
       nombre: estudiante.nombre,
@@ -129,64 +132,55 @@ export class EstudianteListComponent implements OnInit {
   }
 
   saveEstudiante(): void {
-  if (
-    !this.estudianteForm.nombre.trim() ||
-    !this.estudianteForm.carrera.trim() ||
-    !this.estudianteForm.email.trim() ||
-    !this.estudianteForm.telefono.trim()
-  ) {
-    alert('Todos los campos son requeridos');
-    return;
+    if (
+      !this.estudianteForm.nombre.trim() ||
+      !this.estudianteForm.carrera.trim() ||
+      !this.estudianteForm.email.trim() ||
+      !this.estudianteForm.telefono.trim()
+    ) {
+      alert('Todos los campos son requeridos');
+      return;
+    }
+
+    if (this.editingEstudiante) {
+      // UPDATE
+      const payload: UpdateEstudianteRequest = {
+        nombre: this.estudianteForm.nombre,
+        carrera: this.estudianteForm.carrera,
+        email: this.estudianteForm.email,
+        telefono: this.estudianteForm.telefono,
+        semestre: this.estudianteForm.semestre,
+        activo: this.estudianteForm.activo
+      };
+
+      this.estudianteService.updateEstudiante(this.editingEstudiante.id, payload).subscribe({
+        next: () => {
+          this.loadEstudiantes();
+          this.closeModal();
+        },
+        error: (error) => {
+          console.error('Error al actualizar estudiante:', error);
+          alert('Error al actualizar el estudiante');
+        }
+      });
+    } else {
+      // CREATE
+      const payload: CreateEstudianteRequest = { ...this.estudianteForm };
+
+      this.estudianteService.createEstudiante(payload).subscribe({
+        next: () => {
+          this.loadEstudiantes();
+          this.closeModal();
+        },
+        error: (error) => {
+          console.error('Error al crear estudiante:', error);
+          alert('Error al crear el estudiante');
+        }
+      });
+    }
   }
 
-  if (this.editingEstudiante) {
-    // UPDATE: mapeamos los campos del estudiante al modelo de usuario
-    const payloadUsuario: any = {
-      email: this.estudianteForm.email,
-      nombre: this.estudianteForm.nombre,
-      // Usamos 'apellido' para almacenar la carrera (temporalmente)
-      apellido: this.estudianteForm.carrera,
-      activo: this.estudianteForm.activo
-      // Teléfono y semestre no existen en el DTO original del usuario
-    };
-
-    this.estudianteService.updateEstudiante(this.editingEstudiante.id, payloadUsuario).subscribe({
-      next: () => {
-        this.loadEstudiantes();
-        this.closeModal();
-      },
-      error: (error) => {
-        console.error('Error al actualizar estudiante:', error);
-        alert('Error al actualizar el estudiante');
-      }
-    });
-  } else {
-    // CREATE: mapeamos los datos al formato esperado por el servicio
-    const payloadUsuario: any = {
-      email: this.estudianteForm.email,
-      nombre: this.estudianteForm.nombre,
-      apellido: this.estudianteForm.carrera, // mapeo temporal
-      password: 'Temporal#123',               // requerida por createUsuario
-      activo: this.estudianteForm.activo
-      // Teléfono y semestre no existen en el DTO original del usuario
-    };
-
-    this.estudianteService.createEstudiante(payloadUsuario).subscribe({
-      next: () => {
-        this.loadEstudiantes();
-        this.closeModal();
-      },
-      error: (error) => {
-        console.error('Error al crear estudiante:', error);
-        alert('Error al crear el estudiante');
-      }
-    });
-  }
-}
-
-
-
-  deleteEstudiante(estudiante: any): void {
+  deleteEstudiante(estudiante: Estudiante): void {
     if (confirm(`¿Está seguro de eliminar al estudiante "${estudiante.nombre}"?`)) {
       this.estudianteService.deleteEstudiante(estudiante.id).subscribe({
         next: () => {

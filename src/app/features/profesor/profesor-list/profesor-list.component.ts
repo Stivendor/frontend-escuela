@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
 import { ProfesorService } from '../../../core/services/profesor.service';
+import { Profesor, CreateProfesorRequest, UpdateProfesorRequest, ProfesorFilters } from '../../../shared/models/profesor.model';
 
 @Component({
   selector: 'app-profesor-list',
@@ -12,18 +13,18 @@ import { ProfesorService } from '../../../core/services/profesor.service';
   styleUrls: ['./profesor-list.component.scss']
 })
 export class ProfesorListComponent implements OnInit {
-  profesores: any[] = [];
+  profesores: Profesor[] = [];
   loading = false;
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
 
-  filters: any = {};
+  filters: ProfesorFilters = {};
 
   // Modal properties
   showModal = false;
-  editingProfesor: any | null = null;
-  profesorForm = {
+  editingProfesor: Profesor | null = null;
+  profesorForm: CreateProfesorRequest = {
     nombre: '',
     especialidad: '',
     email: '',
@@ -43,7 +44,8 @@ export class ProfesorListComponent implements OnInit {
         email: 'juan.perez@example.com',
         telefono: '3001234567',
         activo: true,
-        fecha_creacion: new Date().toISOString()
+        fecha_creacion: new Date().toISOString(),
+        fecha_actualizacion: new Date().toISOString()
       }
     ];
     this.totalPages = 1;
@@ -57,7 +59,6 @@ export class ProfesorListComponent implements OnInit {
       limit: this.pageSize
     };
 
-    // 🚨 Cambia a profesorService cuando lo tengas listo
     this.profesorService.getProfesores(pagination, this.filters).subscribe({
       next: (response) => {
         this.profesores = response.data;
@@ -101,7 +102,7 @@ export class ProfesorListComponent implements OnInit {
     this.showModal = true;
   }
 
-  editProfesor(profesor: any): void {
+  editProfesor(profesor: Profesor): void {
     this.editingProfesor = profesor;
     this.profesorForm = {
       nombre: profesor.nombre,
@@ -126,63 +127,54 @@ export class ProfesorListComponent implements OnInit {
   }
 
   saveProfesor(): void {
-  if (
-    !this.profesorForm.nombre.trim() ||
-    !this.profesorForm.especialidad.trim() ||
-    !this.profesorForm.email.trim() ||
-    !this.profesorForm.telefono.trim()
-  ) {
-    alert('Todos los campos son requeridos');
-    return;
+    if (
+      !this.profesorForm.nombre.trim() ||
+      !this.profesorForm.especialidad.trim() ||
+      !this.profesorForm.email.trim() ||
+      !this.profesorForm.telefono.trim()
+    ) {
+      alert('Todos los campos son requeridos');
+      return;
+    }
+
+    if (this.editingProfesor) {
+      // UPDATE
+      const payload: UpdateProfesorRequest = {
+        nombre: this.profesorForm.nombre,
+        especialidad: this.profesorForm.especialidad,
+        email: this.profesorForm.email,
+        telefono: this.profesorForm.telefono,
+        activo: this.profesorForm.activo
+      };
+
+      this.profesorService.updateProfesor(this.editingProfesor.id, payload).subscribe({
+        next: () => {
+          this.loadProfesores();
+          this.closeModal();
+        },
+        error: (error) => {
+          console.error('Error al actualizar profesor:', error);
+          alert('Error al actualizar el profesor');
+        }
+      });
+    } else {
+      // CREATE
+      const payload: CreateProfesorRequest = { ...this.profesorForm };
+
+      this.profesorService.createProfesor(payload).subscribe({
+        next: () => {
+          this.loadProfesores();
+          this.closeModal();
+        },
+        error: (error) => {
+          console.error('Error al crear profesor:', error);
+          alert('Error al crear el profesor');
+        }
+      });
+    }
   }
 
-  if (this.editingProfesor) {
-    // UPDATE: mapear a la forma del usuario que espera el servicio
-    const payloadUsuario: any = {
-      email: this.profesorForm.email,
-      nombre: this.profesorForm.nombre,
-      // Usamos 'apellido' para guardar la especialidad temporalmente
-      apellido: this.profesorForm.especialidad,
-      activo: this.profesorForm.activo
-      // Nota: telefono no existe en el DTO de usuario original
-    };
-
-    this.profesorService.updateProfesor(this.editingProfesor.id, payloadUsuario).subscribe({
-      next: () => {
-        this.loadProfesores();
-        this.closeModal();
-      },
-      error: (error) => {
-        console.error('Error al actualizar profesor:', error);
-        alert('Error al actualizar el profesor');
-      }
-    });
-  } else {
-    // CREATE: mapear a la forma del usuario y agregar una password temporal
-    const payloadUsuario: any = {
-      email: this.profesorForm.email,
-      nombre: this.profesorForm.nombre,
-      apellido: this.profesorForm.especialidad, // mapeo temporal
-      password: 'Temporal#123',                 // requerida por createUsuario
-      activo: this.profesorForm.activo
-      // telefono no existe en el DTO del usuario original
-    };
-
-    this.profesorService.createProfesor(payloadUsuario).subscribe({
-      next: () => {
-        this.loadProfesores();
-        this.closeModal();
-      },
-      error: (error) => {
-        console.error('Error al crear profesor:', error);
-        alert('Error al crear el profesor');
-      }
-    });
-  }
-}
-
-
-  deleteProfesor(profesor: any): void {
+  deleteProfesor(profesor: Profesor): void {
     if (confirm(`¿Está seguro de eliminar al profesor "${profesor.nombre}"?`)) {
       this.profesorService.deleteProfesor(profesor.id).subscribe({
         next: () => {

@@ -2,195 +2,190 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
-import { UsuarioService } from '../../../core/services/usuario.service';
-import { Usuario, UsuarioFilters } from '../../../shared/models/usuario.model';
+import { MateriaService } from '../../../core/services/materia.service';
+import {
+  Materia,
+  CreateMateriaRequest,
+  UpdateMateriaRequest,
+  MateriaFilters,
+} from '../../../shared/models/materia.model';
 
 @Component({
   selector: 'app-materia-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './materia-list.component.html',
-  styleUrl: './materia-list.component.scss'
+  styleUrls: ['./materia-list.component.scss'],
 })
 export class MateriaListComponent implements OnInit {
-  usuarios: Usuario[] = [];
+  materias: Materia[] = [];
   loading = false;
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
-  
-  filters: UsuarioFilters = {};
-  
-  // Modal properties
+
+  filters: MateriaFilters = {};
+
+  // Modal
   showModal = false;
-  editingUsuario: Usuario | null = null;
-  usuarioForm = {
-    email: '',
+  editingMateria: Materia | null = null;
+  materiaForm: CreateMateriaRequest = {
     nombre: '',
-    apellido: '',
-    password: '',
-    activo: true
+    codigo: '',
+    creditos: 0,
+    activo: true,
+    profesor_id: undefined, // <- agregado
   };
 
-  constructor(private usuarioService: UsuarioService) { }
+  constructor(private materiaService: MateriaService) {}
 
   ngOnInit(): void {
-    // Agregar un dato dummy para pruebas
-    this.usuarios = [{
-      id: 1,
-      email: 'admin@example.com',
-      nombre: 'Administrador',
-      apellido: 'Sistema',
-      activo: true,
-      ultimo_acceso: new Date().toISOString(),
-      fecha_creacion: new Date().toISOString(),
-      fecha_actualizacion: new Date().toISOString()
-    }];
+    // Dato de prueba
+    this.materias = [
+      {
+        id: 1,
+        nombre: 'Matemáticas I',
+        codigo: 'MAT101',
+        creditos: 3,
+        activo: true,
+        profesor_id: 1, // <- agregado
+        fecha_creacion: new Date().toISOString(),
+        fecha_actualizacion: new Date().toISOString(),
+      },
+    ];
     this.totalPages = 1;
-    // this.loadUsuarios();
+    // this.loadMaterias();
   }
 
-  loadUsuarios(): void {
+  loadMaterias(): void {
     this.loading = true;
     const pagination: PaginationParams = {
       page: this.currentPage,
-      limit: this.pageSize
+      limit: this.pageSize,
     };
 
-    this.usuarioService.getUsuarios(pagination, this.filters).subscribe({
+    this.materiaService.getMaterias(pagination, this.filters).subscribe({
       next: (response) => {
-        this.usuarios = response.data;
+        this.materias = response.data;
         this.totalPages = response.totalPages;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar usuarios:', error);
+        console.error('Error al cargar materias:', error);
         this.loading = false;
-      }
+      },
     });
   }
 
   onFilterChange(): void {
     this.currentPage = 1;
-    this.loadUsuarios();
+    this.loadMaterias();
   }
 
   clearFilters(): void {
     this.filters = {};
     this.currentPage = 1;
-    this.loadUsuarios();
+    this.loadMaterias();
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadUsuarios();
+      this.loadMaterias();
     }
   }
 
   openCreateModal(): void {
-    this.editingUsuario = null;
-    this.usuarioForm = {
-      email: '',
+    this.editingMateria = null;
+    this.materiaForm = {
       nombre: '',
-      apellido: '',
-      password: '',
-      activo: true
+      codigo: '',
+      creditos: 0,
+      activo: true,
+      profesor_id: undefined,
     };
     this.showModal = true;
   }
 
-  editUsuario(usuario: Usuario): void {
-    this.editingUsuario = usuario;
-    this.usuarioForm = {
-      email: usuario.email,
-      nombre: usuario.nombre,
-      apellido: usuario.apellido,
-      password: '',
-      activo: usuario.activo
+  editMateria(materia: Materia): void {
+    this.editingMateria = materia;
+    this.materiaForm = {
+      nombre: materia.nombre,
+      codigo: materia.codigo,
+      creditos: materia.creditos,
+      activo: materia.activo,
+      profesor_id: materia.profesor_id,
     };
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
-    this.editingUsuario = null;
-    this.usuarioForm = {
-      email: '',
+    this.editingMateria = null;
+    this.materiaForm = {
       nombre: '',
-      apellido: '',
-      password: '',
-      activo: true
+      codigo: '',
+      creditos: 0,
+      activo: true,
+      profesor_id: undefined,
     };
   }
 
-  saveUsuario(): void {
-    if (!this.usuarioForm.email.trim() || !this.usuarioForm.nombre.trim() || !this.usuarioForm.apellido.trim()) {
-      alert('Email, nombre y apellido son requeridos');
+  saveMateria(): void {
+    if (
+      !this.materiaForm.nombre.trim() ||
+      !this.materiaForm.codigo.trim() ||
+      !this.materiaForm.creditos
+    ) {
+      alert('Todos los campos son requeridos');
       return;
     }
 
-    if (!this.editingUsuario && !this.usuarioForm.password.trim()) {
-      alert('La contraseña es requerida para nuevos usuarios');
-      return;
-    }
-
-    if (this.editingUsuario) {
-      // Actualizar usuario existente
-      const updateData: any = {
-        email: this.usuarioForm.email,
-        nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
-        activo: this.usuarioForm.activo
+    if (this.editingMateria) {
+      const payload: UpdateMateriaRequest = {
+        nombre: this.materiaForm.nombre,
+        codigo: this.materiaForm.codigo,
+        creditos: this.materiaForm.creditos,
+        activo: this.materiaForm.activo,
+        profesor_id: this.materiaForm.profesor_id,
       };
-      
-      // Solo incluir password si se proporcionó
-      if (this.usuarioForm.password.trim()) {
-        updateData.password = this.usuarioForm.password;
-      }
-      
-      this.usuarioService.updateUsuario(this.editingUsuario.id, updateData).subscribe({
-        next: () => {
-          this.loadUsuarios();
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('Error al actualizar usuario:', error);
-          alert('Error al actualizar el usuario');
-        }
-      });
+
+      this.materiaService
+        .updateMateria(this.editingMateria.id, payload)
+        .subscribe({
+          next: () => {
+            this.loadMaterias();
+            this.closeModal();
+          },
+          error: (error) => {
+            console.error('Error al actualizar materia:', error);
+            alert('Error al actualizar la materia');
+          },
+        });
     } else {
-      // Crear nuevo usuario
-      const newUsuario = {
-        email: this.usuarioForm.email,
-        nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
-        password: this.usuarioForm.password,
-        activo: this.usuarioForm.activo
-      };
-      
-      this.usuarioService.createUsuario(newUsuario).subscribe({
+      const payload: CreateMateriaRequest = { ...this.materiaForm };
+      this.materiaService.createMateria(payload).subscribe({
         next: () => {
-          this.loadUsuarios();
+          this.loadMaterias();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al crear usuario:', error);
-          alert('Error al crear el usuario');
-        }
+          console.error('Error al crear materia:', error);
+          alert('Error al crear la materia');
+        },
       });
     }
   }
 
-  deleteUsuario(usuario: Usuario): void {
-    if (confirm(`¿Está seguro de eliminar el usuario "${usuario.email}"?`)) {
-      this.usuarioService.deleteUsuario(usuario.id).subscribe({
+  deleteMateria(materia: Materia): void {
+    if (confirm(`¿Está seguro de eliminar la materia "${materia.nombre}"?`)) {
+      this.materiaService.deleteMateria(materia.id).subscribe({
         next: () => {
-          this.loadUsuarios();
+          this.loadMaterias();
         },
         error: (error) => {
-          console.error('Error al eliminar usuario:', error);
-        }
+          console.error('Error al eliminar materia:', error);
+        },
       });
     }
   }
