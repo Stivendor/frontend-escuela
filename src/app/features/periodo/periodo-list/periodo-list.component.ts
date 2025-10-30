@@ -2,196 +2,166 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
-import { UsuarioService } from '../../../core/services/usuario.service';
-import { Usuario, UsuarioFilters } from '../../../shared/models/usuario.model';
+import { PeriodoService } from '../../../core/services/periodo.service';
+import { Periodo, CreatePeriodoRequest, PeriodoFilters } from '../../../shared/models/periodo.model';
 
 @Component({
   selector: 'app-periodo-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './periodo-list.component.html',
-  styleUrl: './periodo-list.component.scss'
+  styleUrls: ['./periodo-list.component.scss']
 })
 export class PeriodoListComponent implements OnInit {
-  usuarios: Usuario[] = [];
+  // === Datos ===
+  periodos: Periodo[] = [];
+
+  // === Estado ===
   loading = false;
+  showModal = false;
+  editingPeriodo: Periodo | null = null;
+
+  // === Paginación ===
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
-  
-  filters: UsuarioFilters = {};
-  
-  // Modal properties
-  showModal = false;
-  editingUsuario: Usuario | null = null;
-  usuarioForm = {
-    email: '',
+
+  // === Filtros ===
+  filters: PeriodoFilters = {};
+
+  // === Formulario ===
+  periodoForm: CreatePeriodoRequest = {
     nombre: '',
-    apellido: '',
-    password: '',
     activo: true
   };
 
-  constructor(private usuarioService: UsuarioService) { }
+  constructor(private periodoService: PeriodoService) {}
 
   ngOnInit(): void {
-    // Agregar un dato dummy para pruebas
-    this.usuarios = [{
-      id: 1,
-      email: 'admin@example.com',
-      nombre: 'Administrador',
-      apellido: 'Sistema',
-      activo: true,
-      ultimo_acceso: new Date().toISOString(),
-      fecha_creacion: new Date().toISOString(),
-      fecha_actualizacion: new Date().toISOString()
-    }];
+    // 👉 Datos de prueba (dummy)
+    this.periodos = [
+      { id: 1, nombre: '2025-1', activo: true },
+      { id: 2, nombre: '2025-2', activo: false },
+      { id: 3, nombre: '2026-1', activo: true }
+    ];
     this.totalPages = 1;
-    // this.loadUsuarios();
+
+    // Si quieres que cargue desde el backend luego, descomenta esta línea:
+    // this.loadPeriodos();
   }
 
-  loadUsuarios(): void {
+  // === Carga de periodos ===
+  loadPeriodos(): void {
     this.loading = true;
     const pagination: PaginationParams = {
       page: this.currentPage,
       limit: this.pageSize
     };
 
-    this.usuarioService.getUsuarios(pagination, this.filters).subscribe({
+    this.periodoService.getPeriodos(pagination, this.filters).subscribe({
       next: (response) => {
-        this.usuarios = response.data;
-        this.totalPages = response.totalPages;
+        this.periodos = Array.isArray(response.data)
+          ? response.data.flat()
+          : [];
+        this.totalPages = response.totalPages || 1;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar usuarios:', error);
+        console.error('Error al cargar periodos:', error);
         this.loading = false;
       }
     });
   }
 
+  // === Filtros ===
   onFilterChange(): void {
     this.currentPage = 1;
-    this.loadUsuarios();
+    this.loadPeriodos();
   }
 
   clearFilters(): void {
     this.filters = {};
     this.currentPage = 1;
-    this.loadUsuarios();
+    this.loadPeriodos();
   }
 
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadUsuarios();
-    }
-  }
-
+  // === Modal ===
   openCreateModal(): void {
-    this.editingUsuario = null;
-    this.usuarioForm = {
-      email: '',
+    this.editingPeriodo = null;
+    this.periodoForm = {
       nombre: '',
-      apellido: '',
-      password: '',
       activo: true
-    };
-    this.showModal = true;
-  }
-
-  editUsuario(usuario: Usuario): void {
-    this.editingUsuario = usuario;
-    this.usuarioForm = {
-      email: usuario.email,
-      nombre: usuario.nombre,
-      apellido: usuario.apellido,
-      password: '',
-      activo: usuario.activo
     };
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
-    this.editingUsuario = null;
-    this.usuarioForm = {
-      email: '',
+    this.editingPeriodo = null;
+    this.periodoForm = {
       nombre: '',
-      apellido: '',
-      password: '',
       activo: true
     };
   }
 
-  saveUsuario(): void {
-    if (!this.usuarioForm.email.trim() || !this.usuarioForm.nombre.trim() || !this.usuarioForm.apellido.trim()) {
-      alert('Email, nombre y apellido son requeridos');
+  // === CRUD ===
+  savePeriodo(): void {
+    if (!this.periodoForm.nombre.trim()) {
+      alert('El nombre del periodo es obligatorio');
       return;
     }
 
-    if (!this.editingUsuario && !this.usuarioForm.password.trim()) {
-      alert('La contraseña es requerida para nuevos usuarios');
-      return;
-    }
-
-    if (this.editingUsuario) {
-      // Actualizar usuario existente
-      const updateData: any = {
-        email: this.usuarioForm.email,
-        nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
-        activo: this.usuarioForm.activo
-      };
-      
-      // Solo incluir password si se proporcionó
-      if (this.usuarioForm.password.trim()) {
-        updateData.password = this.usuarioForm.password;
-      }
-      
-      this.usuarioService.updateUsuario(this.editingUsuario.id, updateData).subscribe({
+    if (this.editingPeriodo) {
+      this.periodoService.updatePeriodo(this.editingPeriodo.id, this.periodoForm).subscribe({
         next: () => {
-          this.loadUsuarios();
+          this.loadPeriodos();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al actualizar usuario:', error);
-          alert('Error al actualizar el usuario');
+          console.error('Error al actualizar periodo:', error);
+          alert('Error al actualizar el periodo');
         }
       });
     } else {
-      // Crear nuevo usuario
-      const newUsuario = {
-        email: this.usuarioForm.email,
-        nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
-        password: this.usuarioForm.password,
-        activo: this.usuarioForm.activo
-      };
-      
-      this.usuarioService.createUsuario(newUsuario).subscribe({
+      this.periodoService.createPeriodo(this.periodoForm).subscribe({
         next: () => {
-          this.loadUsuarios();
+          this.loadPeriodos();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al crear usuario:', error);
-          alert('Error al crear el usuario');
+          console.error('Error al crear periodo:', error);
+          alert('Error al crear el periodo');
         }
       });
     }
   }
 
-  deleteUsuario(usuario: Usuario): void {
-    if (confirm(`¿Está seguro de eliminar el usuario "${usuario.email}"?`)) {
-      this.usuarioService.deleteUsuario(usuario.id).subscribe({
-        next: () => {
-          this.loadUsuarios();
-        },
+  editPeriodo(periodo: Periodo): void {
+    this.editingPeriodo = periodo;
+    this.periodoForm = {
+      nombre: periodo.nombre,
+      activo: periodo.activo
+    };
+    this.showModal = true;
+  }
+
+  deletePeriodo(periodo: Periodo): void {
+    if (confirm(`¿Está seguro de eliminar el periodo "${periodo.nombre}"?`)) {
+      this.periodoService.deletePeriodo(periodo.id).subscribe({
+        next: () => this.loadPeriodos(),
         error: (error) => {
-          console.error('Error al eliminar usuario:', error);
+          console.error('Error al eliminar periodo:', error);
+          alert('No se pudo eliminar el periodo');
         }
       });
+    }
+  }
+
+  // === Paginación ===
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadPeriodos();
     }
   }
 }

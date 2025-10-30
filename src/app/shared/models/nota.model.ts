@@ -4,7 +4,6 @@ export interface Nota {
   estudiante_id: number;
   profesor_id: number;
   valor: number;
-  fecha_creacion: string;
   activo: boolean;
 
     // Relaciones opcionales

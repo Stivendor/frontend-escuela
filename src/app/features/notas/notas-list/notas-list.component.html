@@ -53,7 +53,6 @@
               <th>Valor</th>
               <th>Estudiante</th>
               <th>Profesor</th>
-              <th>Fecha creación</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -70,7 +69,6 @@
               <td>{{ nota.valor }}</td>
               <td>{{ nota.estudiante?.nombre }}</td>
               <td>{{ nota.profesor?.nombre }}</td>
-              <td>{{ nota.fecha_creacion | date:'short' }}</td>
               <td>
                 <span class="badge" [ngClass]="nota.activo ? 'badge-activo' : 'badge-inactivo'">
                   {{ nota.activo ? 'Activo' : 'Inactivo' }}
