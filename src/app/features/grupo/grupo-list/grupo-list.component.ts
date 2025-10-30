@@ -1,197 +1,253 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { GrupoService } from '../../../core/services/grupo.service';
+import { Grupo, CreateGrupoRequest, GrupoFilters } from '../../../shared/models/grupo.model';
+import { Materia } from '../../../shared/models/materia.model';
+import { Profesor } from '../../../shared/models/profesor.model';
+import { Periodo } from '../../../shared/models/periodo.model';
 import { PaginationParams } from '../../../core/models/api-response.model';
-import { UsuarioService } from '../../../core/services/usuario.service';
-import { Usuario, UsuarioFilters } from '../../../shared/models/usuario.model';
+import { MateriaService } from '../../../core/services/materia.service';
+import { ProfesorService } from '../../../core/services/profesor.service';
+import { PeriodoService } from '../../../core/services/periodo.service';
 
 @Component({
   selector: 'app-grupo-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './grupo-list.component.html',
-  styleUrl: './grupo-list.component.scss'
+  styleUrls: ['./grupo-list.component.scss']
 })
 export class GrupoListComponent implements OnInit {
-  usuarios: Usuario[] = [];
+  // === Datos ===
+  grupos: Grupo[] = [];
+  materias: Materia[] = [];
+  profesores: Profesor[] = [];
+  periodos: Periodo[] = [];
+
+  // === Estado ===
   loading = false;
+  showModal = false;
+  editingGrupo: Grupo | null = null;
+
+  // === Paginación ===
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
-  
-  filters: UsuarioFilters = {};
-  
-  // Modal properties
-  showModal = false;
-  editingUsuario: Usuario | null = null;
-  usuarioForm = {
-    email: '',
+
+  // === Filtros ===
+  filters: GrupoFilters = {};
+
+  // === Formulario ===
+  grupoForm: CreateGrupoRequest = {
     nombre: '',
-    apellido: '',
-    password: '',
+    materia_id: 0,
+    periodo_id: 0,
+    profesor_id: 0,
     activo: true
   };
 
-  constructor(private usuarioService: UsuarioService) { }
+  constructor(
+    private grupoService: GrupoService,
+    private materiaService: MateriaService,
+    private profesorService: ProfesorService,
+    private periodoService: PeriodoService
+  ) {}
 
   ngOnInit(): void {
-    // Agregar un dato dummy para pruebas
-    this.usuarios = [{
+  // 🧩 Datos de prueba (solo visibles sin backend)
+  this.materias = [
+    { id: 1, nombre: 'Matemáticas', codigo: 'MAT101', creditos: 3, profesor_id: 1, activo: true },
+    { id: 2, nombre: 'Programación I', codigo: 'PRG101', creditos: 4, profesor_id: 2, activo: true },
+    { id: 3, nombre: 'Bases de Datos', codigo: 'BD101', creditos: 3, profesor_id: 3, activo: false }
+  ];
+
+  this.profesores = [
+    { id: 1, nombre: 'Carlos Gómez', especialidad: 'Matemáticas', email: 'carlos@ejemplo.com', telefono: '3001234567', activo: true },
+    { id: 2, nombre: 'María Pérez', especialidad: 'Programación', email: 'maria@ejemplo.com', telefono: '3009876543', activo: true },
+    { id: 3, nombre: 'Juan Rodríguez', especialidad: 'Bases de Datos', email: 'juan@ejemplo.com', telefono: '3014567890', activo: false }
+  ];
+
+  this.periodos = [
+    { id: 1, nombre: '2025-1', activo: true },
+    { id: 2, nombre: '2025-2', activo: false }
+  ];
+
+  this.grupos = [
+    {
       id: 1,
-      email: 'admin@example.com',
-      nombre: 'Administrador',
-      apellido: 'Sistema',
+      nombre: 'Grupo A',
+      materia_id: 1,
+      periodo_id: 1,
+      profesor_id: 1,
       activo: true,
-      ultimo_acceso: new Date().toISOString(),
-      fecha_creacion: new Date().toISOString(),
-      fecha_actualizacion: new Date().toISOString()
-    }];
-    this.totalPages = 1;
-    // this.loadUsuarios();
-  }
+      materia: { id: 1, nombre: 'Matemáticas' },
+      periodo: { id: 1, nombre: '2025-1' },
+      profesor: { id: 1, nombre: 'Carlos Gómez' }
+    },
+    {
+      id: 2,
+      nombre: 'Grupo B',
+      materia_id: 2,
+      periodo_id: 2,
+      profesor_id: 2,
+      activo: false,
+      materia: { id: 2, nombre: 'Programación I' },
+      periodo: { id: 2, nombre: '2025-2' },
+      profesor: { id: 2, nombre: 'María Pérez' }
+    }
+  ];
 
-  loadUsuarios(): void {
+  this.totalPages = 1;
+
+  // Descomenta esto cuando ya funcione la API:
+  // this.loadGrupos();
+  // this.loadMaterias();
+  // this.loadProfesores();
+  // this.loadPeriodos();
+}
+
+
+  // === Carga de datos ===
+  loadGrupos(): void {
     this.loading = true;
-    const pagination: PaginationParams = {
-      page: this.currentPage,
-      limit: this.pageSize
-    };
+    const pagination: PaginationParams = { page: this.currentPage, limit: this.pageSize };
 
-    this.usuarioService.getUsuarios(pagination, this.filters).subscribe({
+    this.grupoService.getGrupos(pagination, this.filters).subscribe({
       next: (response) => {
-        this.usuarios = response.data;
-        this.totalPages = response.totalPages;
+        this.grupos = response.data || [];
+        this.totalPages = response.totalPages || 1;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar usuarios:', error);
+        console.error('❌ Error al cargar grupos:', error);
         this.loading = false;
       }
     });
   }
 
+  loadMaterias(): void {
+    const pagination: PaginationParams = { page: 1, limit: 100 };
+    this.materiaService.getMaterias(pagination).subscribe({
+      next: (res) => {
+        this.materias = res.data || [];
+      },
+      error: (err) => console.error('❌ Error al cargar materias:', err)
+    });
+  }
+
+  loadProfesores(): void {
+    const pagination: PaginationParams = { page: 1, limit: 100 };
+    this.profesorService.getProfesores(pagination).subscribe({
+      next: (res) => {
+        this.profesores = res.data || [];
+      },
+      error: (err) => console.error('❌ Error al cargar profesores:', err)
+    });
+  }
+
+  loadPeriodos(): void {
+    this.periodoService.getPeriodos().subscribe({
+      next: (res) => {
+        this.periodos = Array.isArray(res.data) ? res.data.flat() : [];
+      },
+      error: (err) => console.error('❌ Error al cargar periodos:', err)
+    });
+  }
+
+  // === Filtros ===
   onFilterChange(): void {
     this.currentPage = 1;
-    this.loadUsuarios();
+    this.loadGrupos();
   }
 
   clearFilters(): void {
     this.filters = {};
-    this.currentPage = 1;
-    this.loadUsuarios();
+    this.loadGrupos();
   }
 
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadUsuarios();
-    }
-  }
-
+  // === Modal ===
   openCreateModal(): void {
-    this.editingUsuario = null;
-    this.usuarioForm = {
-      email: '',
+    this.editingGrupo = null;
+    this.grupoForm = {
       nombre: '',
-      apellido: '',
-      password: '',
+      materia_id: 0,
+      periodo_id: 0,
+      profesor_id: 0,
       activo: true
-    };
-    this.showModal = true;
-  }
-
-  editUsuario(usuario: Usuario): void {
-    this.editingUsuario = usuario;
-    this.usuarioForm = {
-      email: usuario.email,
-      nombre: usuario.nombre,
-      apellido: usuario.apellido,
-      password: '',
-      activo: usuario.activo
     };
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
-    this.editingUsuario = null;
-    this.usuarioForm = {
-      email: '',
-      nombre: '',
-      apellido: '',
-      password: '',
-      activo: true
-    };
+    this.editingGrupo = null;
   }
 
-  saveUsuario(): void {
-    if (!this.usuarioForm.email.trim() || !this.usuarioForm.nombre.trim() || !this.usuarioForm.apellido.trim()) {
-      alert('Email, nombre y apellido son requeridos');
+  // === CRUD ===
+  editGrupo(grupo: Grupo): void {
+    this.editingGrupo = grupo;
+    this.grupoForm = {
+      nombre: grupo.nombre,
+      materia_id: grupo.materia_id,
+      periodo_id: grupo.periodo_id,
+      profesor_id: grupo.profesor_id,
+      activo: grupo.activo
+    };
+    this.showModal = true;
+  }
+
+  saveGrupo(): void {
+    if (!this.grupoForm.nombre.trim() ||
+        !this.grupoForm.materia_id ||
+        !this.grupoForm.periodo_id ||
+        !this.grupoForm.profesor_id) {
+      alert('⚠️ Todos los campos son obligatorios');
       return;
     }
 
-    if (!this.editingUsuario && !this.usuarioForm.password.trim()) {
-      alert('La contraseña es requerida para nuevos usuarios');
-      return;
-    }
-
-    if (this.editingUsuario) {
-      // Actualizar usuario existente
-      const updateData: any = {
-        email: this.usuarioForm.email,
-        nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
-        activo: this.usuarioForm.activo
-      };
-      
-      // Solo incluir password si se proporcionó
-      if (this.usuarioForm.password.trim()) {
-        updateData.password = this.usuarioForm.password;
-      }
-      
-      this.usuarioService.updateUsuario(this.editingUsuario.id, updateData).subscribe({
+    if (this.editingGrupo) {
+      this.grupoService.updateGrupo(this.editingGrupo.id, this.grupoForm).subscribe({
         next: () => {
-          this.loadUsuarios();
+          this.loadGrupos();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al actualizar usuario:', error);
-          alert('Error al actualizar el usuario');
+          console.error('❌ Error al actualizar grupo:', error);
+          alert('Error al actualizar grupo');
         }
       });
     } else {
-      // Crear nuevo usuario
-      const newUsuario = {
-        email: this.usuarioForm.email,
-        nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
-        password: this.usuarioForm.password,
-        activo: this.usuarioForm.activo
-      };
-      
-      this.usuarioService.createUsuario(newUsuario).subscribe({
+      this.grupoService.createGrupo(this.grupoForm).subscribe({
         next: () => {
-          this.loadUsuarios();
+          this.loadGrupos();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al crear usuario:', error);
-          alert('Error al crear el usuario');
+          console.error('❌ Error al crear grupo:', error);
+          alert('Error al crear grupo');
         }
       });
     }
   }
 
-  deleteUsuario(usuario: Usuario): void {
-    if (confirm(`¿Está seguro de eliminar el usuario "${usuario.email}"?`)) {
-      this.usuarioService.deleteUsuario(usuario.id).subscribe({
-        next: () => {
-          this.loadUsuarios();
-        },
+  deleteGrupo(grupo: Grupo): void {
+    if (confirm(`¿Está seguro de eliminar el grupo "${grupo.nombre}"?`)) {
+      this.grupoService.deleteGrupo(grupo.id).subscribe({
+        next: () => this.loadGrupos(),
         error: (error) => {
-          console.error('Error al eliminar usuario:', error);
+          console.error('❌ Error al eliminar grupo:', error);
+          alert('No se pudo eliminar el grupo');
         }
       });
+    }
+  }
+
+  // === Paginación ===
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadGrupos();
     }
   }
 }

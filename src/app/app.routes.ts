@@ -11,14 +11,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
-    path: 'categorias',
-    loadComponent: () => import('./features/categoria/categoria-list/categoria-list.component').then(m => m.CategoriaListComponent)
-  },
-  {
-    path: 'productos',
-    loadComponent: () => import('./features/producto/producto-list/producto-list.component').then(m => m.ProductoListComponent)
-  },
-  {
     path: 'usuarios',
     loadComponent: () => import('./features/usuario/usuario-list/usuario-list.component').then(m => m.UsuarioListComponent)
   },
@@ -45,10 +37,6 @@ export const routes: Routes = [
   {
     path: 'notas',
     loadComponent: () => import('./features/notas/notas-list/notas-list.component').then(m => m.NotasListComponent)
-  },
-  {
-    path: 'auditorias',
-    loadComponent: () => import('./features/auditoria/auditoria-list/auditoria-list.component').then(m => m.AuditoriaListComponent)
   },
   {
     path: 'auth',

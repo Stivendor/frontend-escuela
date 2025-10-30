@@ -2,75 +2,72 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
-import { ProductoService } from '../../../core/services/producto.service';
-import { Producto, ProductoFilters } from '../../../shared/models/producto.model';
+import { NotaService } from '../../../core/services/nota.service';
+import { Nota, NotaFilters, CreateNotaRequest } from '../../../shared/models/nota.model';
 
 @Component({
   selector: 'app-notas-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './notas-list.component.html',
-  styleUrl: './notas-list.component.scss'
+  styleUrls: ['./notas-list.component.scss']
 })
 export class NotasListComponent implements OnInit {
-  productos: Producto[] = [];
+  notas: Nota[] = [];
   loading = false;
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
-  
-  filters: ProductoFilters = {};
-  
-  // Modal properties
+
+  filters: NotaFilters = {};
+
+  // Modal
   showModal = false;
-  editingProducto: Producto | null = null;
-  productoForm = {
-    nombre: '',
-    descripcion: '',
-    precio: 0,
-    stock: 0,
-    categoria_id: 0,
+  editingNota: Nota | null = null;
+  notaForm: CreateNotaRequest = {
+    materia_id: 0,
+    estudiante_id: 0,
+    profesor_id: 0,
+    valor: 0,
     activo: true
   };
 
-  constructor(private productoService: ProductoService) { }
+  constructor(private notaService: NotaService) {}
 
   ngOnInit(): void {
-    // Agregar un dato dummy para pruebas
-    this.productos = [{
-      id: 1,
-      nombre: 'Laptop Dell Inspiron',
-      descripcion: 'Laptop para trabajo y entretenimiento',
-      precio: 2500000,
-      stock: 15,
-      categoria_id: 1,
-      categoria: {
+    // Dato de prueba
+    this.notas = [
+      {
         id: 1,
-        nombre: 'Tecnología'
-      },
-      activo: true,
-      fecha_creacion: new Date().toISOString(),
-      fecha_actualizacion: new Date().toISOString()
-    }];
+        materia_id: 1,
+        estudiante_id: 2,
+        profesor_id: 3,
+        valor: 4.5,
+        activo: true,
+        estudiante: { id: 2, nombre: 'María Lopez' },
+        profesor: { id: 3, nombre: 'Juan Pérez' },
+        materia: { id: 1, nombre: 'Matemáticas I' }
+      }
+    ];
     this.totalPages = 1;
-    // this.loadProductos();
+    // this.loadNotas();
   }
 
-  loadProductos(): void {
+  loadNotas(): void {
     this.loading = true;
     const pagination: PaginationParams = {
       page: this.currentPage,
       limit: this.pageSize
     };
 
-    this.productoService.getProductos(pagination, this.filters).subscribe({
+    this.notaService.getNotas(pagination, this.filters).subscribe({
       next: (response) => {
-        this.productos = response.data;
+        this.notas = response.data;
         this.totalPages = response.totalPages;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar productos:', error);
+        console.error('Error al cargar notas:', error);
         this.loading = false;
       }
     });
@@ -78,130 +75,102 @@ export class NotasListComponent implements OnInit {
 
   onFilterChange(): void {
     this.currentPage = 1;
-    this.loadProductos();
+    this.loadNotas();
   }
 
   clearFilters(): void {
     this.filters = {};
     this.currentPage = 1;
-    this.loadProductos();
+    this.loadNotas();
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadProductos();
+      this.loadNotas();
     }
   }
 
   openCreateModal(): void {
-    this.editingProducto = null;
-    this.productoForm = {
-      nombre: '',
-      descripcion: '',
-      precio: 0,
-      stock: 0,
-      categoria_id: 0,
+    this.editingNota = null;
+    this.notaForm = {
+      materia_id: 0,
+      estudiante_id: 0,
+      profesor_id: 0,
+      valor: 0,
       activo: true
     };
     this.showModal = true;
   }
 
-  editProducto(producto: Producto): void {
-    this.editingProducto = producto;
-    this.productoForm = {
-      nombre: producto.nombre,
-      descripcion: producto.descripcion || '',
-      precio: producto.precio,
-      stock: producto.stock,
-      categoria_id: producto.categoria_id,
-      activo: producto.activo
+  editNota(nota: Nota): void {
+    this.editingNota = nota;
+    this.notaForm = {
+      materia_id: nota.materia_id,
+      estudiante_id: nota.estudiante_id,
+      profesor_id: nota.profesor_id,
+      valor: nota.valor,
+      activo: nota.activo
     };
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
-    this.editingProducto = null;
-    this.productoForm = {
-      nombre: '',
-      descripcion: '',
-      precio: 0,
-      stock: 0,
-      categoria_id: 0,
+    this.editingNota = null;
+    this.notaForm = {
+      materia_id: 0,
+      estudiante_id: 0,
+      profesor_id: 0,
+      valor: 0,
       activo: true
     };
   }
 
-  saveProducto(): void {
-    if (!this.productoForm.nombre.trim() || this.productoForm.precio <= 0 || this.productoForm.stock < 0 || this.productoForm.categoria_id <= 0) {
-      alert('Nombre, precio, stock y categoría son requeridos');
+  saveNota(): void {
+    if (
+      !this.notaForm.materia_id ||
+      !this.notaForm.estudiante_id ||
+      !this.notaForm.profesor_id ||
+      this.notaForm.valor <= 0
+    ) {
+      alert('Todos los campos son obligatorios');
       return;
     }
 
-    if (this.editingProducto) {
-      // Actualizar producto existente
-      const updateData = {
-        nombre: this.productoForm.nombre,
-        descripcion: this.productoForm.descripcion,
-        precio: this.productoForm.precio,
-        stock: this.productoForm.stock,
-        categoria_id: this.productoForm.categoria_id,
-        activo: this.productoForm.activo
-      };
-      
-      this.productoService.updateProducto(this.editingProducto.id, updateData).subscribe({
+    if (this.editingNota) {
+      const updateData = { ...this.notaForm };
+      this.notaService.updateNota(this.editingNota.id, updateData).subscribe({
         next: () => {
-          this.loadProductos();
+          this.loadNotas();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al actualizar producto:', error);
-          alert('Error al actualizar el producto');
+          console.error('Error al actualizar la nota:', error);
+          alert('Error al actualizar la nota');
         }
       });
     } else {
-      // Crear nuevo producto
-      const newProducto = {
-        nombre: this.productoForm.nombre,
-        descripcion: this.productoForm.descripcion,
-        precio: this.productoForm.precio,
-        stock: this.productoForm.stock,
-        categoria_id: this.productoForm.categoria_id,
-        activo: this.productoForm.activo
-      };
-      
-      this.productoService.createProducto(newProducto).subscribe({
+      const newNota = { ...this.notaForm };
+      this.notaService.createNota(newNota).subscribe({
         next: () => {
-          this.loadProductos();
+          this.loadNotas();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al crear producto:', error);
-          alert('Error al crear el producto');
+          console.error('Error al crear la nota:', error);
+          alert('Error al crear la nota');
         }
       });
     }
   }
 
-  deleteProducto(producto: Producto): void {
-    if (confirm(`¿Está seguro de eliminar el producto "${producto.nombre}"?`)) {
-      this.productoService.deleteProducto(producto.id).subscribe({
-        next: () => {
-          this.loadProductos();
-        },
-        error: (error) => {
-          console.error('Error al eliminar producto:', error);
-        }
+  deleteNota(nota: Nota): void {
+    if (confirm(`¿Está seguro de eliminar la nota con ID ${nota.id}?`)) {
+      this.notaService.deleteNota(nota.id).subscribe({
+        next: () => this.loadNotas(),
+        error: (error) => console.error('Error al eliminar nota:', error)
       });
     }
-  }
-
-  formatearPrecio(precio: number): string {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(precio);
   }
 }

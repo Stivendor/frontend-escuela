@@ -1,30 +1,50 @@
+/* ---------- BADGES ---------- */
 .badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.badge-success {
-  background-color: #28a745;
-  color: white;
+/* Estado activo - verde brillante */
+.badge-activo {
+  background-color: #00c853; /* Verde moderno */
+  color: #fff;
 }
 
-.badge-danger {
-  background-color: #dc3545;
-  color: white;
+/* Estado inactivo - rojo */
+.badge-inactivo {
+  background-color: #e53935;
+  color: #fff;
 }
 
+/* ---------- TABLA ---------- */
 .table-responsive {
   overflow-x: auto;
 }
 
+.table thead th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #343a40;
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* ---------- PAGINACIÓN ---------- */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 1.5rem;
 }
 
-// Modal styles
+.pagination button {
+  min-width: 100px;
+}
+
+/* ---------- MODAL ---------- */
 .modal {
   position: fixed;
   top: 0;
@@ -66,7 +86,8 @@
   font-weight: 600;
 }
 
-.close {
+.close,
+.btn-close {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -77,7 +98,8 @@
   cursor: pointer;
 }
 
-.close:hover {
+.close:hover,
+.btn-close:hover {
   opacity: 0.75;
 }
 
@@ -93,6 +115,7 @@
   gap: 0.5rem;
 }
 
+/* ---------- FORMULARIO ---------- */
 .form-group {
   margin-bottom: 1rem;
 }
