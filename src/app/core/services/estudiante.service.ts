@@ -10,7 +10,7 @@ import { ApiResponse, PaginatedResponse, PaginationParams } from '../models/api-
   providedIn: 'root'
 })
 export class EstudianteService {
-  private readonly endpoint = '/estudiantes';
+  private readonly endpoint = '/estudiantes/';
 
   constructor(private apiService: ApiService) { }
 

@@ -36,43 +36,54 @@ export class EstudianteListComponent implements OnInit {
   constructor(private estudianteService: EstudianteService) {}
 
   ngOnInit(): void {
-    // Dato de prueba
-    this.estudiantes = [
-      {
-        id: 1,
-        nombre: 'María López',
-        carrera: 'Ingeniería de Sistemas',
-        email: 'maria.lopez@example.com',
-        telefono: '3004567890',
-        semestre: 5,
-        activo: true,
-        fecha_creacion: new Date().toISOString(),
-        fecha_actualizacion: new Date().toISOString()
-      }
-    ];
-    this.totalPages = 1;
-    // this.loadEstudiantes();
-  }
+  this.loadEstudiantes(); // ✅ Ahora sí carga los datos reales del backend
+}
+
 
   loadEstudiantes(): void {
-    this.loading = true;
-    const pagination: PaginationParams = {
-      page: this.currentPage,
-      limit: this.pageSize
-    };
+  this.loading = true;
+  const pagination: PaginationParams = {
+    page: this.currentPage,
+    limit: this.pageSize
+  };
 
-    this.estudianteService.getEstudiantes(pagination, this.filters).subscribe({
-      next: (response) => {
-        this.estudiantes = response.data;
-        this.totalPages = response.totalPages;
+  this.estudianteService.getEstudiantes(pagination, this.filters).subscribe({
+    next: (response: any) => {
+      // Si el backend devuelve un objeto con 'data', úsalo. Si devuelve un array, úsalo directamente.
+      const data = Array.isArray(response) ? response : response.data;
+
+      if (!data) {
+        console.error('⚠️ El backend no devolvió datos válidos:', response);
         this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar estudiantes:', error);
-        this.loading = false;
+        return;
       }
-    });
-  }
+
+      // Adaptar los datos al modelo del front
+      this.estudiantes = data.map((e: any) => ({
+        id: e.id_estudiante,
+        nombre: e.persona?.nombre || '',
+        carrera: e.carrera,
+        email: e.persona?.email || '',
+        telefono: e.persona?.telefono || '',
+        semestre: e.semestre,
+        activo: true,
+        fecha_creacion: e.persona?.fecha_creacion,
+        fecha_actualizacion: e.persona?.fecha_edicion
+      }));
+
+      this.loading = false;
+      console.log('✅ Estudiantes cargados desde backend:', this.estudiantes);
+    },
+    error: (error) => {
+      console.error('❌ Error al cargar estudiantes:', error);
+      this.loading = false;
+    }
+  });
+}
+
+
+
+
 
   onFilterChange(): void {
     this.currentPage = 1;
