@@ -10,7 +10,7 @@ import { ApiResponse, PaginatedResponse, PaginationParams } from '../models/api-
   providedIn: 'root'
 })
 export class MateriaService {
-  private readonly endpoint = '/materias';
+  private readonly endpoint = '/materias/';
 
   constructor(private apiService: ApiService) { }
 
