@@ -38,19 +38,9 @@ export class PeriodoListComponent implements OnInit {
   constructor(private periodoService: PeriodoService) {}
 
   ngOnInit(): void {
-    // 👉 Datos de prueba (dummy)
-    this.periodos = [
-      { id: 1, nombre: '2025-1', activo: true },
-      { id: 2, nombre: '2025-2', activo: false },
-      { id: 3, nombre: '2026-1', activo: true }
-    ];
-    this.totalPages = 1;
-
-    // Si quieres que cargue desde el backend luego, descomenta esta línea:
-    // this.loadPeriodos();
+    this.loadPeriodos(); 
   }
 
-  // === Carga de periodos ===
   loadPeriodos(): void {
     this.loading = true;
     const pagination: PaginationParams = {
@@ -59,15 +49,33 @@ export class PeriodoListComponent implements OnInit {
     };
 
     this.periodoService.getPeriodos(pagination, this.filters).subscribe({
-      next: (response) => {
-        this.periodos = Array.isArray(response.data)
-          ? response.data.flat()
-          : [];
-        this.totalPages = response.totalPages || 1;
+      next: (response: any) => {
+        // Manejo de respuesta del backend
+        const data = Array.isArray(response) ? response : response.data;
+
+        if (!data) {
+          console.error('⚠️ El backend no devolvió datos válidos:', response);
+          this.loading = false;
+          return;
+        }
+
+        // Adaptar los datos al modelo del front
+        this.periodos = data.map((p: any) => ({
+          id: p.id_periodo,
+          nombre: p.nombre,
+          fecha_inicio: p.fecha_inicio,
+          fecha_fin: p.fecha_fin,
+          activo: p.activo,
+          fecha_creacion: p.fecha_creacion,
+          fecha_actualizacion: p.fecha_edicion
+        }));
+
+        this.totalPages = response.total_pages || 1;
         this.loading = false;
+        console.log('✅ Periodos cargados desde backend:', this.periodos);
       },
       error: (error) => {
-        console.error('Error al cargar periodos:', error);
+        console.error('❌ Error al cargar periodos:', error);
         this.loading = false;
       }
     });

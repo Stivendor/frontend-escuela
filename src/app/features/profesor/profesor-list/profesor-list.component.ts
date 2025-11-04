@@ -32,45 +32,52 @@ export class ProfesorListComponent implements OnInit {
     activo: true
   };
 
-  constructor(private profesorService: ProfesorService) {}
+constructor(private profesorService: ProfesorService) {}
 
-  ngOnInit(): void {
-    // Dato de prueba temporal
-    this.profesores = [
-      {
-        id: 1,
-        nombre: 'Juan Pérez',
-        especialidad: 'Matemáticas',
-        email: 'juan.perez@example.com',
-        telefono: '3001234567',
+ngOnInit(): void {
+  this.loadProfesores(); // ✅ Carga los datos de profesores
+}
+
+loadProfesores(): void {
+  this.loading = true;
+  const pagination: PaginationParams = {
+    page: this.currentPage,
+    limit: this.pageSize
+  };
+
+  this.profesorService.getProfesores(pagination, this.filters).subscribe({
+    next: (response: any) => {
+      // Manejo de respuesta del backend
+      const data = Array.isArray(response) ? response : response.data;
+
+      if (!data) {
+        console.error('⚠️ El backend no devolvió datos válidos:', response);
+        this.loading = false;
+        return;
+      }
+
+      // Adaptar los datos al modelo del front
+      this.profesores = data.map((p: any) => ({
+        id: p.id_profesor,
+        nombre: p.persona?.nombre || '',
+        especialidad: p.especialidad,
+        email: p.persona?.email || '',
+        telefono: p.persona?.telefono || '',
+        departamento: p.departamento,
         activo: true,
-        fecha_creacion: new Date().toISOString(),
-        fecha_actualizacion: new Date().toISOString()
-      }
-    ];
-    this.totalPages = 1;
-    // this.loadProfesores();
-  }
+        fecha_creacion: p.persona?.fecha_creacion,
+        fecha_actualizacion: p.persona?.fecha_edicion
+      }));
 
-  loadProfesores(): void {
-    this.loading = true;
-    const pagination: PaginationParams = {
-      page: this.currentPage,
-      limit: this.pageSize
-    };
-
-    this.profesorService.getProfesores(pagination, this.filters).subscribe({
-      next: (response) => {
-        this.profesores = response.data;
-        this.totalPages = response.totalPages;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar profesores:', error);
-        this.loading = false;
-      }
-    });
-  }
+      this.loading = false;
+      console.log('✅ Profesores cargados desde backend:', this.profesores);
+    },
+    error: (error) => {
+      console.error('❌ Error al cargar profesores:', error);
+      this.loading = false;
+    }
+  });
+}
 
   onFilterChange(): void {
     this.currentPage = 1;

@@ -1,4 +1,4 @@
-// Sidebar styles based on the frontend example
+/* Sidebar styles - versión azulado */
 .sidebar {
   position: fixed;
   top: 0;
@@ -6,17 +6,17 @@
   left: 0;
   z-index: 1000;
   width: 260px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #002f8a 0%, #0059d6 100%); /* tonos azules */
+  box-shadow: 0 8px 30px rgba(0, 40, 120, 0.35);
   transition: all 0.3s ease;
 }
 
-.sidebar[data-color="red"] {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+.sidebar[data-color="blue"] {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
 }
 
 .logo {
-  padding: 15px 0;
+  padding: 15px 10px;
   margin: 0;
   display: block;
   position: relative;
@@ -30,7 +30,7 @@
   right: 15px;
   height: 1px;
   width: calc(100% - 30px);
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .logo-img {
@@ -43,14 +43,14 @@
   text-align: center;
   overflow: hidden;
   vertical-align: middle;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .logo-text {
-  color: white;
+  color: #eaf4ff;
   font-weight: bold;
   font-size: 12px;
   text-align: center;
@@ -61,7 +61,7 @@
   display: block;
   white-space: nowrap;
   font-size: 14px;
-  color: #fff;
+  color: #eaf4ff;
   text-decoration: none;
   font-weight: 400;
   line-height: 30px;
@@ -71,7 +71,7 @@
 .logo-mini {
   opacity: 1;
   float: left;
-  width: 30px;
+  width: 0px;
   text-align: center !important;
   margin-left: 10px;
   margin-right: 12px;
@@ -85,6 +85,7 @@
   font-weight: 600;
   font-size: 12px;
   letter-spacing: 1px;
+  color: #dfefff;
 }
 
 .sidebar-wrapper {
@@ -94,6 +95,19 @@
   width: 260px;
   z-index: 4;
   padding-bottom: 30px;
+}
+
+/* Custom scrollbar más sutil y acorde al azul */
+.sidebar-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
 .nav {
@@ -107,7 +121,7 @@
 }
 
 .nav li > a {
-  color: #fff;
+  color: #eaf4ff;
   display: block;
   text-decoration: none;
   position: relative;
@@ -116,20 +130,23 @@
   font-size: 12px;
   padding: 10px 8px;
   line-height: 30px;
-  opacity: 0.8;
-  transition: all 0.3s ease;
+  opacity: 0.9;
+  transition: all 0.25s ease;
 }
 
 .nav li > a:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   opacity: 1;
   color: #fff;
+  border-left: 3px solid rgba(255,255,255,0.08);
+  padding-left: 5px;
 }
 
 .nav li > a.active {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
   opacity: 1;
   color: #fff;
+  box-shadow: inset 4px 0 0 rgba(255,255,255,0.06);
 }
 
 .nav li > a i {
@@ -139,6 +156,7 @@
   line-height: 30px;
   width: 34px;
   text-align: center;
+  color: rgba(255,255,255,0.95);
 }
 
 .nav li > a p {
@@ -150,9 +168,10 @@
   height: auto;
   white-space: nowrap;
   transition: 0.3s ease;
+  color: #eaf4ff;
 }
 
-// Responsive
+/* Responsive */
 @media (max-width: 991px) {
   .sidebar {
     position: fixed;
@@ -175,10 +194,10 @@
   }
 }
 
-// Icons styles (you might need to include the now-ui-icons font)
+/* Icon font settings */
 .now-ui-icons {
   font-family: 'Nucleo Outline';
-  speak: none;
+  speak-as: none;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;

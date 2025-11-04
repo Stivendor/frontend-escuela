@@ -27,22 +27,6 @@ import { CreateUsuarioRequest } from '../../../shared/models/usuario.model';
                   <span class="label-icon">📧</span>
                   Email
                 </label>
-                <input 
-                  type="email" 
-                  id="email"
-                  class="form-control" 
-                  [(ngModel)]="registerData.email"
-                  name="email"
-                  required
-                  email
-                  placeholder="tu@email.com"
-                  #email="ngModel"
-                  [class.is-invalid]="email.invalid && email.touched"
-                >
-                <div class="invalid-feedback" *ngIf="email.invalid && email.touched">
-                  <div *ngIf="email.errors?.['required']">El email es requerido</div>
-                  <div *ngIf="email.errors?.['email']">El email no es válido</div>
-                </div>
               </div>
 
               <div class="form-group">
@@ -96,22 +80,6 @@ import { CreateUsuarioRequest } from '../../../shared/models/usuario.model';
                   <span class="label-icon">👥</span>
                   Apellido
                 </label>
-                <input 
-                  type="text" 
-                  id="apellido"
-                  class="form-control" 
-                  [(ngModel)]="registerData.apellido"
-                  name="apellido"
-                  required
-                  minlength="2"
-                  placeholder="Tu apellido"
-                  #apellido="ngModel"
-                  [class.is-invalid]="apellido.invalid && apellido.touched"
-                >
-                <div class="invalid-feedback" *ngIf="apellido.invalid && apellido.touched">
-                  <div *ngIf="apellido.errors?.['required']">El apellido es requerido</div>
-                  <div *ngIf="apellido.errors?.['minlength']">El apellido debe tener al menos 2 caracteres</div>
-                </div>
               </div>
 
               <div class="form-group">
@@ -293,11 +261,9 @@ import { CreateUsuarioRequest } from '../../../shared/models/usuario.model';
 })
 export class RegisterComponent implements OnInit {
   registerData: CreateUsuarioRequest = {
-    email: '',
     password: '',
-    nombre: '',
-    apellido: ''
-  };
+    nombre: ''
+  }
   
   loading = false;
 

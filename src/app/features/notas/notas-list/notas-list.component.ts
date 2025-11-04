@@ -35,22 +35,7 @@ export class NotasListComponent implements OnInit {
   constructor(private notaService: NotaService) {}
 
   ngOnInit(): void {
-    // Dato de prueba
-    this.notas = [
-      {
-        id: 1,
-        materia_id: 1,
-        estudiante_id: 2,
-        profesor_id: 3,
-        valor: 4.5,
-        activo: true,
-        estudiante: { id: 2, nombre: 'María Lopez' },
-        profesor: { id: 3, nombre: 'Juan Pérez' },
-        materia: { id: 1, nombre: 'Matemáticas I' }
-      }
-    ];
-    this.totalPages = 1;
-    // this.loadNotas();
+    this.loadNotas();
   }
 
   loadNotas(): void {
@@ -61,13 +46,56 @@ export class NotasListComponent implements OnInit {
     };
 
     this.notaService.getNotas(pagination, this.filters).subscribe({
-      next: (response) => {
-        this.notas = response.data;
-        this.totalPages = response.totalPages;
+      next: (response: any) => {
+        console.log('Respuesta cruda notas:', response); // <- ver estructura
+
+        // Aceptar array directo o objeto { data, ... }
+        const data = Array.isArray(response) ? response : response.data ?? response;
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          console.warn('No se recibieron notas desde el backend. Usando fallback temporal.');
+          this.notas = [
+            {
+              id: 'local-1',
+              materia_id: 0,
+              estudiante_id: 0,
+              profesor_id: 0,
+              valor: 0,
+              activo: true,
+              fecha_creacion: new Date().toISOString(),
+              fecha_actualizacion: new Date().toISOString()
+            }
+          ] as any;
+          this.totalPages = 1;
+          this.loading = false;
+          return;
+        }
+
+        // Mapear los campos a nuestro modelo frontal de forma resiliente
+        this.notas = (data as any[]).map((n: any) => ({
+          id: n.id_nota ?? n.id ?? '',
+          materia_id: n.materia_id ?? n.id_materia ?? n.materia?.id ?? 0,
+          estudiante_id: n.estudiante_id ?? n.id_estudiante ?? n.estudiante?.id ?? 0,
+          profesor_id: n.profesor_id ?? n.id_profesor ?? n.profesor?.id ?? 0,
+          valor: n.valor ?? n.calificacion ?? n.score ?? 0,
+          comentario: n.comentario ?? n.obs ?? '',
+          activo: n.activo ?? n.is_active ?? true,
+          fecha_creacion: n.fecha_creacion ?? n.created_at,
+          fecha_actualizacion: n.fecha_edicion ?? n.updated_at,
+
+          // <- nombres para mostrar en el grid (fíjate en los posibles paths)
+          materia_nombre: n.materia?.nombre ?? n.materia_nombre ?? n.nombre_materia ?? n.materia?.titulo ?? '',
+          estudiante_nombre: n.estudiante?.persona?.nombre ?? n.estudiante_nombre ?? n.nombre_estudiante ?? n.estudiante?.nombre ?? '',
+          profesor_nombre: n.profesor?.persona?.nombre ?? n.profesor_nombre ?? n.nombre_profesor ?? n.profesor?.nombre ?? ''
+        })) as Nota[];
+
+        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
         this.loading = false;
+        console.log('✅ Notas mapeadas:', this.notas);
       },
       error: (error) => {
         console.error('Error al cargar notas:', error);
+        this.notas = [];
         this.loading = false;
       }
     });

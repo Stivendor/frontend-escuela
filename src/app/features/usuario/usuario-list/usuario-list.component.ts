@@ -25,9 +25,7 @@ export class UsuarioListComponent implements OnInit {
   showModal = false;
   editingUsuario: Usuario | null = null;
   usuarioForm = {
-    email: '',
     nombre: '',
-    apellido: '',
     password: '',
     activo: true
   };
@@ -35,19 +33,8 @@ export class UsuarioListComponent implements OnInit {
   constructor(private usuarioService: UsuarioService) { }
 
   ngOnInit(): void {
-    // Agregar un dato dummy para pruebas
-    this.usuarios = [{
-      id: 1,
-      email: 'admin@example.com',
-      nombre: 'Administrador',
-      apellido: 'Sistema',
-      activo: true,
-      ultimo_acceso: new Date().toISOString(),
-      fecha_creacion: new Date().toISOString(),
-      fecha_actualizacion: new Date().toISOString()
-    }];
-    this.totalPages = 1;
-    // this.loadUsuarios();
+    console.log('UsuarioListComponent init');
+    this.loadUsuarios();
   }
 
   loadUsuarios(): void {
@@ -58,13 +45,30 @@ export class UsuarioListComponent implements OnInit {
     };
 
     this.usuarioService.getUsuarios(pagination, this.filters).subscribe({
-      next: (response) => {
-        this.usuarios = response.data;
-        this.totalPages = response.totalPages;
+      next: (response: any) => {
+        const data = Array.isArray(response) ? response : response.data ?? response;
+
+        if (!data) {
+          console.error('⚠️ El backend no devolvió datos válidos:', response);
+          this.usuarios = [];
+          this.loading = false;
+          return;
+        }
+
+        // Mapear únicamente los campos necesarios para el grid
+        this.usuarios = data.map((u: any) => ({
+          id: u.id_usuario ?? u.id ?? u.id_user ?? '',
+          nombre: u.persona?.nombre ?? u.nombre ?? u.username ?? u.user ?? '',
+          activo: u.activo ?? u.is_active ?? u.estado ?? true,
+          ultimo_acceso: u.ultimo_acceso ?? u.last_login ?? u.last_access ?? u.ultima_conexion ?? null
+        })) as any; // casteo corto para evitar errores de tipos si tu modelo incluye más campos
+
+        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
         this.loading = false;
       },
       error: (error) => {
         console.error('Error al cargar usuarios:', error);
+        this.usuarios = [];
         this.loading = false;
       }
     });
@@ -91,9 +95,7 @@ export class UsuarioListComponent implements OnInit {
   openCreateModal(): void {
     this.editingUsuario = null;
     this.usuarioForm = {
-      email: '',
       nombre: '',
-      apellido: '',
       password: '',
       activo: true
     };
@@ -103,9 +105,7 @@ export class UsuarioListComponent implements OnInit {
   editUsuario(usuario: Usuario): void {
     this.editingUsuario = usuario;
     this.usuarioForm = {
-      email: usuario.email,
       nombre: usuario.nombre,
-      apellido: usuario.apellido,
       password: '',
       activo: usuario.activo
     };
@@ -116,17 +116,15 @@ export class UsuarioListComponent implements OnInit {
     this.showModal = false;
     this.editingUsuario = null;
     this.usuarioForm = {
-      email: '',
       nombre: '',
-      apellido: '',
       password: '',
       activo: true
     };
   }
 
   saveUsuario(): void {
-    if (!this.usuarioForm.email.trim() || !this.usuarioForm.nombre.trim() || !this.usuarioForm.apellido.trim()) {
-      alert('Email, nombre y apellido son requeridos');
+    if (!this.usuarioForm.nombre.trim()) {
+      alert('Nombre es requerido');
       return;
     }
 
@@ -138,9 +136,7 @@ export class UsuarioListComponent implements OnInit {
     if (this.editingUsuario) {
       // Actualizar usuario existente
       const updateData: any = {
-        email: this.usuarioForm.email,
         nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
         activo: this.usuarioForm.activo
       };
       
@@ -162,9 +158,7 @@ export class UsuarioListComponent implements OnInit {
     } else {
       // Crear nuevo usuario
       const newUsuario = {
-        email: this.usuarioForm.email,
         nombre: this.usuarioForm.nombre,
-        apellido: this.usuarioForm.apellido,
         password: this.usuarioForm.password,
         activo: this.usuarioForm.activo
       };
@@ -183,7 +177,7 @@ export class UsuarioListComponent implements OnInit {
   }
 
   deleteUsuario(usuario: Usuario): void {
-    if (confirm(`¿Está seguro de eliminar el usuario "${usuario.email}"?`)) {
+    if (confirm(`¿Está seguro de eliminar el usuario "${usuario.nombre}"?`)) {
       this.usuarioService.deleteUsuario(usuario.id).subscribe({
         next: () => {
           this.loadUsuarios();

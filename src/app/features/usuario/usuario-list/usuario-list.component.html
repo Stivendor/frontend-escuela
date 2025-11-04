@@ -15,15 +15,6 @@
             <input 
               type="text" 
               class="form-control" 
-              placeholder="Buscar por email..."
-              [(ngModel)]="filters.email"
-              (input)="onFilterChange()"
-            >
-          </div>
-          <div class="col-md-3">
-            <input 
-              type="text" 
-              class="form-control" 
               placeholder="Buscar por nombre..."
               [(ngModel)]="filters.nombre"
               (input)="onFilterChange()"
@@ -54,9 +45,7 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Email</th>
               <th>Nombre</th>
-              <th>Apellido</th>
               <th>Estado</th>
               <th>Último Acceso</th>
               <th>Acciones</th>
@@ -71,9 +60,7 @@
             </tr>
             <tr *ngFor="let usuario of usuarios">
               <td>{{ usuario.id }}</td>
-              <td>{{ usuario.email }}</td>
               <td>{{ usuario.nombre }}</td>
-              <td>{{ usuario.apellido }}</td>
               <td>
                 <span class="badge" [class.badge-success]="usuario.activo" [class.badge-danger]="!usuario.activo">
                   {{ usuario.activo ? 'Activo' : 'Inactivo' }}
@@ -129,18 +116,6 @@
         <div class="modal-body">
           <form (ngSubmit)="saveUsuario()">
             <div class="form-group">
-              <label for="email">Email *</label>
-              <input 
-                type="email" 
-                class="form-control" 
-                id="email" 
-                [(ngModel)]="usuarioForm.email" 
-                name="email"
-                required
-                placeholder="Ingrese el email del usuario"
-              >
-            </div>
-            <div class="form-group">
               <label for="nombre">Nombre *</label>
               <input 
                 type="text" 
@@ -150,18 +125,6 @@
                 name="nombre"
                 required
                 placeholder="Ingrese el nombre"
-              >
-            </div>
-            <div class="form-group">
-              <label for="apellido">Apellido *</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="apellido" 
-                [(ngModel)]="usuarioForm.apellido" 
-                name="apellido"
-                required
-                placeholder="Ingrese el apellido"
               >
             </div>
             <div class="form-group" *ngIf="!editingUsuario">
