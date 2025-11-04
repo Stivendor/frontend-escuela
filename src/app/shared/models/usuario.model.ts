@@ -3,9 +3,7 @@
  */
 export interface Usuario {
   id: number;
-  email: string;
   nombre: string;
-  apellido: string;
   activo: boolean;
   fecha_creacion: string;
   fecha_actualizacion: string;
@@ -16,10 +14,8 @@ export interface Usuario {
  * Modelo para crear un nuevo usuario
  */
 export interface CreateUsuarioRequest {
-  email: string;
   password: string;
   nombre: string;
-  apellido: string;
   activo?: boolean;
 }
 
@@ -27,9 +23,7 @@ export interface CreateUsuarioRequest {
  * Modelo para actualizar un usuario
  */
 export interface UpdateUsuarioRequest {
-  email?: string;
   nombre?: string;
-  apellido?: string;
   activo?: boolean;
 }
 
@@ -45,9 +39,7 @@ export interface ChangePasswordRequest {
  * Modelo para filtros de usuarios
  */
 export interface UsuarioFilters {
-  email?: string;
   nombre?: string;
-  apellido?: string;
   activo?: boolean;
   fecha_desde?: string;
   fecha_hasta?: string;

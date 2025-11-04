@@ -9,7 +9,7 @@ import { PaginatedResponse } from '../models/api-response.model';
   providedIn: 'root'
 })
 export class PeriodoService {
-  private apiUrl = `${environment.apiUrl}/periodos`;
+  private apiUrl = `${environment.apiUrl}/periodos/`;
 
   constructor(private http: HttpClient) {}
 
