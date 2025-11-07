@@ -36,16 +36,16 @@ export class NotaService {
   /**
    * Actualiza una nota existente
    */
-  updateNota(id: number, nota: UpdateNotaRequest): Observable<ApiResponse<Nota>> {
-    return this.apiService.put<Nota>(`${this.endpoint}/${id}`, nota);
-  }
+  updateNota(id: string | number, nota: any): Observable<any> {
+  return this.apiService.put<any>(`${this.endpoint}/${id}`, nota);
+}
 
   /**
    * Elimina una nota
    */
-  deleteNota(id: number): Observable<ApiResponse<void>> {
-    return this.apiService.delete<void>(`${this.endpoint}/${id}`);
-  }
+  deleteNota(id: string | number): Observable<any> {
+  return this.apiService.delete<any>(`${this.endpoint}/${id}`);
+}
 
   /**
    * Obtiene todas las notas de un estudiante específico
