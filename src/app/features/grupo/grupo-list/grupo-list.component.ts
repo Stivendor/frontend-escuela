@@ -23,7 +23,6 @@ export class GrupoListComponent implements OnInit {
   grupos: Grupo[] = [];
   materias: Materia[] = [];
   profesores: Profesor[] = [];
-  periodos: Periodo[] = [];
 
   // === Estado ===
   loading = false;
@@ -55,105 +54,196 @@ export class GrupoListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-  // 🧩 Datos de prueba (solo visibles sin backend)
-  this.materias = [
-    { id: 1, nombre: 'Matemáticas', codigo: 'MAT101', creditos: 3, profesor_id: 1, activo: true },
-    { id: 2, nombre: 'Programación I', codigo: 'PRG101', creditos: 4, profesor_id: 2, activo: true },
-    { id: 3, nombre: 'Bases de Datos', codigo: 'BD101', creditos: 3, profesor_id: 3, activo: false }
-  ];
-
-  this.profesores = [
-    { id: 1, nombre: 'Carlos Gómez', especialidad: 'Matemáticas', email: 'carlos@ejemplo.com', telefono: '3001234567', activo: true },
-    { id: 2, nombre: 'María Pérez', especialidad: 'Programación', email: 'maria@ejemplo.com', telefono: '3009876543', activo: true },
-    { id: 3, nombre: 'Juan Rodríguez', especialidad: 'Bases de Datos', email: 'juan@ejemplo.com', telefono: '3014567890', activo: false }
-  ];
-
-  this.periodos = [
-    { id: 1, nombre: '2025-1', activo: true },
-    { id: 2, nombre: '2025-2', activo: false }
-  ];
-
-  this.grupos = [
-    {
-      id: 1,
-      nombre: 'Grupo A',
-      materia_id: 1,
-      periodo_id: 1,
-      profesor_id: 1,
-      activo: true,
-      materia: { id: 1, nombre: 'Matemáticas' },
-      periodo: { id: 1, nombre: '2025-1' },
-      profesor: { id: 1, nombre: 'Carlos Gómez' }
-    },
-    {
-      id: 2,
-      nombre: 'Grupo B',
-      materia_id: 2,
-      periodo_id: 2,
-      profesor_id: 2,
-      activo: false,
-      materia: { id: 2, nombre: 'Programación I' },
-      periodo: { id: 2, nombre: '2025-2' },
-      profesor: { id: 2, nombre: 'María Pérez' }
-    }
-  ];
-
-  this.totalPages = 1;
-
-  // Descomenta esto cuando ya funcione la API:
-  // this.loadGrupos();
-  // this.loadMaterias();
-  // this.loadProfesores();
-  // this.loadPeriodos();
+  this.loadGrupos();
+  this.loadMaterias();
+  this.loadProfesores();
 }
 
 
   // === Carga de datos ===
-  loadGrupos(): void {
-    this.loading = true;
-    const pagination: PaginationParams = { page: this.currentPage, limit: this.pageSize };
+loadGrupos(): void {
+  this.loading = true;
 
+  const pagination: PaginationParams = {
+    page: this.currentPage,
+    limit: this.pageSize,
+  };
+
+  // Esperar a que materias y profesores estén cargados antes de procesar los grupos
+  const waitForData = () =>
+    new Promise<void>((resolve) => {
+      const check = () => {
+        if (this.materias.length > 0 && this.profesores.length > 0) {
+          resolve();
+        } else {
+          setTimeout(check, 100); // Revisa cada 100ms
+        }
+      };
+      check();
+    });
+
+  waitForData().then(() => {
     this.grupoService.getGrupos(pagination, this.filters).subscribe({
-      next: (response) => {
-        this.grupos = response.data || [];
-        this.totalPages = response.totalPages || 1;
+      next: (response: any) => {
+        console.log('📦 Respuesta cruda grupos:', response);
+
+        const data = Array.isArray(response)
+          ? response
+          : response.data ?? response;
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          console.warn('⚠️ No se recibieron grupos desde el backend.');
+          this.totalPages = 1;
+          this.loading = false;
+          return;
+        }
+
+        this.grupos = (data as any[]).map((g: any) => {
+          const materiaEncontrada = this.materias.find(
+            (m) => m.id === (g.materia_id ?? g.materia?.id)
+          );
+          const profesorEncontrado = this.profesores.find(
+            (p) => p.id === (g.profesor_id ?? g.profesor?.id)
+          );
+
+          return {
+            id: g.id ?? g.id_grupo ?? 0,
+            nombre: g.nombre ?? g.nombre_grupo ?? '',
+            materia_id: g.materia_id ?? g.materia?.id ?? 0,
+            profesor_id: g.profesor_id ?? g.profesor?.id ?? 0,
+            activo: g.activo ?? g.is_active ?? true,
+
+            materia: materiaEncontrada
+              ? { id: materiaEncontrada.id, nombre: materiaEncontrada.nombre }
+              : g.materia
+              ? { id: g.materia.id, nombre: g.materia.nombre }
+              : { id: 0, nombre: 'Sin asignar' },
+
+            profesor: profesorEncontrado
+              ? { id: profesorEncontrado.id, nombre: profesorEncontrado.nombre }
+              : g.profesor
+              ? { id: g.profesor.id, nombre: g.profesor.nombre }
+              : { id: 0, nombre: 'Sin asignar' },
+          } as Grupo;
+        });
+
+        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
         this.loading = false;
+        console.log('✅ Grupos cargados:', this.grupos);
       },
       error: (error) => {
         console.error('❌ Error al cargar grupos:', error);
+        this.grupos = [];
         this.loading = false;
-      }
+      },
     });
-  }
+  });
+}
+
+
+
 
   loadMaterias(): void {
-    const pagination: PaginationParams = { page: 1, limit: 100 };
-    this.materiaService.getMaterias(pagination).subscribe({
-      next: (res) => {
-        this.materias = res.data || [];
+    this.loading = true;
+    const pagination: PaginationParams = {
+      page: this.currentPage,
+      limit: this.pageSize,
+    };
+
+    this.materiaService.getMaterias(pagination, this.filters).subscribe({
+      next: (response: any) => {
+        console.log('Respuesta cruda materias:', response);
+
+        // Aceptar array directo o objeto { data, ... }
+        const data = Array.isArray(response) ? response : response.data ?? response;
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          console.warn('No se recibieron materias desde el backend. Usando fallback temporal.');
+          // Fallback temporal para ver la UI mientras debuggeas
+          this.materias = [
+            {
+              id: 'local-1',
+              nombre: 'Matemáticas Básicas',
+              codigo: 'MAT-101',
+              creditos: 4,
+              profesor_id: null,
+              profesor_nombre: '',
+              activo: true,
+              fecha_creacion: new Date().toISOString(),
+              fecha_actualizacion: new Date().toISOString()
+            }
+          ] as any;
+          this.totalPages = 1;
+          this.loading = false;
+          return;
+        }
+
+        // Mapear campos a nuestro modelo frontal (resiliente a diferentes nombres desde backend)
+        this.materias = (data as any[]).map((m: any) => ({
+          id: m.id_materia ?? m.id ?? m.idMateria ?? '',
+          nombre: m.nombre ?? m.titulo ?? m.nombre_materia ?? '',
+          codigo: m.codigo ?? m.sigla ?? m.codigo_materia ?? '',
+          creditos: m.creditos ?? m.creditos_horas ?? m.creditos_totales ?? 0,
+          profesor_id: m.profesor_id ?? m.profesor?.id ?? m.docente_id ?? null,
+          profesor_nombre: m.profesor?.persona?.nombre ?? m.profesor?.nombre ?? m.docente?.nombre ?? '',
+          activo: m.activo ?? m.is_active ?? true,
+          fecha_creacion: m.fecha_creacion ?? m.created_at,
+          fecha_actualizacion: m.fecha_edicion ?? m.updated_at
+        })) as Materia[];
+
+        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
+        this.loading = false;
+        console.log('✅ Materias mapeadas:', this.materias);
       },
-      error: (err) => console.error('❌ Error al cargar materias:', err)
+      error: (error) => {
+        console.error('Error al cargar materias:', error);
+        this.materias = [];
+        this.loading = false;
+      },
     });
   }
 
-  loadProfesores(): void {
-    const pagination: PaginationParams = { page: 1, limit: 100 };
-    this.profesorService.getProfesores(pagination).subscribe({
-      next: (res) => {
-        this.profesores = res.data || [];
-      },
-      error: (err) => console.error('❌ Error al cargar profesores:', err)
-    });
-  }
+loadProfesores(): void {
+  this.loading = true;
+  const pagination: PaginationParams = {
+    page: this.currentPage,
+    limit: this.pageSize
+  };
 
-  loadPeriodos(): void {
-    this.periodoService.getPeriodos().subscribe({
-      next: (res) => {
-        this.periodos = Array.isArray(res.data) ? res.data.flat() : [];
-      },
-      error: (err) => console.error('❌ Error al cargar periodos:', err)
-    });
-  }
+  this.profesorService.getProfesores(pagination, this.filters).subscribe({
+    next: (response: any) => {
+      // Manejo de respuesta del backend
+      const data = Array.isArray(response) ? response : response.data;
+
+      if (!data) {
+        console.error('⚠️ El backend no devolvió datos válidos:', response);
+        this.loading = false;
+        return;
+      }
+
+      // Adaptar los datos al modelo del front
+      this.profesores = data.map((p: any) => ({
+        id: p.id_profesor,
+        nombre: p.persona?.nombre || '',
+        especialidad: p.especialidad,
+        email: p.persona?.email || '',
+        telefono: p.persona?.telefono || '',
+        departamento: p.departamento,
+        activo: true,
+        fecha_creacion: p.persona?.fecha_creacion,
+        fecha_actualizacion: p.persona?.fecha_edicion
+      }));
+
+      this.loading = false;
+      console.log('✅ Profesores cargados desde backend:', this.profesores);
+    },
+    error: (error) => {
+      console.error('❌ Error al cargar profesores:', error);
+      this.loading = false;
+    }
+  });
+}
+
 
   // === Filtros ===
   onFilterChange(): void {

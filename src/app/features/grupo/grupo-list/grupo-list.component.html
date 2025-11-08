@@ -44,7 +44,6 @@
             <tr>
               <th>GRUPO</th>
               <th>MATERIA</th>
-              <th>PERIODO</th>
               <th>PROFESOR</th>
               <th>ESTADO</th>
               <th class="text-center">ACCIONES</th>
@@ -62,7 +61,6 @@
             <tr *ngFor="let grupo of grupos">
               <td>{{ grupo.nombre }}</td>
               <td>{{ grupo.materia?.nombre || 'Sin asignar' }}</td>
-              <td>{{ grupo.periodo?.nombre || 'Sin asignar' }}</td>
               <td>{{ grupo.profesor?.nombre || 'Sin asignar' }}</td>
               <td>
                 <span
@@ -102,6 +100,7 @@
         >
           Siguiente
         </button>
+        
       </div>
     </div>
   </div>
