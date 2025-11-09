@@ -2,9 +2,9 @@ export interface Nota {
   id: number | string;
   materia_id: number | string;
   estudiante_id: number | string;
-  profesor_id: number | string;
+  profesor_id?: number | string; // puede ser null en el backend
   valor: number;
-  activo: boolean;
+  activo?: boolean; // opcional para evitar errores
 
   // Relaciones opcionales
   estudiante?: {
@@ -32,11 +32,13 @@ export interface Nota {
 }
 
 export interface CreateNotaRequest {
-  materia_id: number | string;
-  estudiante_id: number | string;
-  profesor_id: number | string;
+  materia_id: string | number;
+  estudiante_id: string | number;
   valor: number;
-  activo: boolean;
+
+  // 🔹 estos dos se dejan opcionales por compatibilidad
+  profesor_id?: string | number;
+  activo?: boolean;
 }
 
 export interface UpdateNotaRequest {
