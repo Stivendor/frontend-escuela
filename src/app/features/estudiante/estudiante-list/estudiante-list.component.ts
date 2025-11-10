@@ -3,14 +3,19 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
 import { EstudianteService } from '../../../core/services/estudiante.service';
-import { Estudiante, CreateEstudianteRequest, UpdateEstudianteRequest, EstudianteFilters } from '../../../shared/models/estudiante.model';
+import {
+  Estudiante,
+  CreateEstudianteRequest,
+  UpdateEstudianteRequest,
+  EstudianteFilters,
+} from '../../../shared/models/estudiante.model';
 
 @Component({
   selector: 'app-estudiante-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './estudiante-list.component.html',
-  styleUrls: ['./estudiante-list.component.scss']
+  styleUrls: ['./estudiante-list.component.scss'],
 })
 export class EstudianteListComponent implements OnInit {
   estudiantes: Estudiante[] = [];
@@ -30,61 +35,84 @@ export class EstudianteListComponent implements OnInit {
     email: '',
     telefono: '',
     semestre: 1,
-    activo: true
+    activo: true,
   };
 
   constructor(private estudianteService: EstudianteService) {}
 
   ngOnInit(): void {
-  this.loadEstudiantes(); // ✅ Ahora sí carga los datos reales del backend
-}
-
+    this.loadEstudiantes();
+  }
 
   loadEstudiantes(): void {
-  this.loading = true;
-  const pagination: PaginationParams = {
-    page: this.currentPage,
-    limit: this.pageSize
-  };
+    this.loading = true;
 
-  this.estudianteService.getEstudiantes(pagination, this.filters).subscribe({
-    next: (response: any) => {
-      // Si el backend devuelve un objeto con 'data', úsalo. Si devuelve un array, úsalo directamente.
-      const data = Array.isArray(response) ? response : response.data;
+    const pagination: PaginationParams = {
+      page: this.currentPage,
+      limit: this.pageSize,
+    };
 
-      if (!data) {
-        console.error('⚠️ El backend no devolvió datos válidos:', response);
+    // Filtros (puedes agregar condiciones como { activo: true } si deseas)
+    const estudianteFilters = this.filters;
+
+    this.estudianteService.getEstudiantes(pagination, estudianteFilters).subscribe({
+      next: (response: any) => {
+        console.log('📥 Respuesta cruda estudiantes:', response);
+
+        // Adapta diferentes estructuras del backend
+        const data =
+          Array.isArray(response) ? response :
+          response.data ??
+          response.results ??
+          response.estudiantes ??
+          response;
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          console.warn('⚠️ No se recibieron estudiantes desde el backend. Cargando ejemplo temporal.');
+          this.estudiantes = [
+            {
+              id: 'local-1',
+              nombre: 'Juan Pérez',
+              carrera: 'Ingeniería de Software',
+              email: 'juan.perez@example.com',
+              telefono: '3001234567',
+              semestre: 4,
+              activo: true,
+              fecha_creacion: new Date().toISOString(),
+              fecha_actualizacion: new Date().toISOString(),
+            },
+          ] as Estudiante[];
+          this.totalPages = 1;
+          this.loading = false;
+          return;
+        }
+
+        // ✅ Mapeo robusto al modelo front
+        this.estudiantes = (data as any[]).map((e: any) => ({
+          id: e.id_estudiante ?? e.id ?? e.estudiante_id ?? '',
+          nombre: e.persona?.nombre ?? e.nombre ?? '',
+          carrera: e.carrera ?? e.programa ?? '',
+          email: e.persona?.email ?? e.email ?? '',
+          telefono: e.persona?.telefono ?? e.telefono ?? '',
+          semestre: e.semestre ?? e.nivel ?? 1,
+          activo: e.activo ?? e.is_active ?? true,
+          fecha_creacion: e.fecha_creacion ?? e.created_at ?? null,
+          fecha_actualizacion: e.fecha_edicion ?? e.updated_at ?? null,
+        })) as Estudiante[];
+
+        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
         this.loading = false;
-        return;
-      }
+        console.log('✅ Estudiantes mapeados:', this.estudiantes);
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar estudiantes:', error);
+        this.estudiantes = [];
+        this.loading = false;
+      },
+    });
+  }
 
-      // Adaptar los datos al modelo del front
-      this.estudiantes = data.map((e: any) => ({
-        id: e.id_estudiante,
-        nombre: e.persona?.nombre || '',
-        carrera: e.carrera,
-        email: e.persona?.email || '',
-        telefono: e.persona?.telefono || '',
-        semestre: e.semestre,
-        activo: true,
-        fecha_creacion: e.persona?.fecha_creacion,
-        fecha_actualizacion: e.persona?.fecha_edicion
-      }));
-
-      this.loading = false;
-      console.log('✅ Estudiantes cargados desde backend:', this.estudiantes);
-    },
-    error: (error) => {
-      console.error('❌ Error al cargar estudiantes:', error);
-      this.loading = false;
-    }
-  });
-}
-
-
-
-
-
+  // ----- FILTROS -----
   onFilterChange(): void {
     this.currentPage = 1;
     this.loadEstudiantes();
@@ -96,6 +124,7 @@ export class EstudianteListComponent implements OnInit {
     this.loadEstudiantes();
   }
 
+  // ----- PAGINACIÓN -----
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
@@ -103,6 +132,7 @@ export class EstudianteListComponent implements OnInit {
     }
   }
 
+  // ----- MODAL -----
   openCreateModal(): void {
     this.editingEstudiante = null;
     this.estudianteForm = {
@@ -111,7 +141,7 @@ export class EstudianteListComponent implements OnInit {
       email: '',
       telefono: '',
       semestre: 1,
-      activo: true
+      activo: true,
     };
     this.showModal = true;
   }
@@ -124,7 +154,7 @@ export class EstudianteListComponent implements OnInit {
       email: estudiante.email,
       telefono: estudiante.telefono,
       semestre: estudiante.semestre,
-      activo: estudiante.activo
+      activo: estudiante.activo,
     };
     this.showModal = true;
   }
@@ -138,10 +168,11 @@ export class EstudianteListComponent implements OnInit {
       email: '',
       telefono: '',
       semestre: 1,
-      activo: true
+      activo: true,
     };
   }
 
+  // ----- GUARDAR -----
   saveEstudiante(): void {
     if (
       !this.estudianteForm.nombre.trim() ||
@@ -154,16 +185,8 @@ export class EstudianteListComponent implements OnInit {
     }
 
     if (this.editingEstudiante) {
-      // UPDATE
-      const payload: UpdateEstudianteRequest = {
-        nombre: this.estudianteForm.nombre,
-        carrera: this.estudianteForm.carrera,
-        email: this.estudianteForm.email,
-        telefono: this.estudianteForm.telefono,
-        semestre: this.estudianteForm.semestre,
-        activo: this.estudianteForm.activo
-      };
-
+      // 🔄 UPDATE
+      const payload: UpdateEstudianteRequest = { ...this.estudianteForm };
       this.estudianteService.updateEstudiante(this.editingEstudiante.id, payload).subscribe({
         next: () => {
           this.loadEstudiantes();
@@ -172,12 +195,11 @@ export class EstudianteListComponent implements OnInit {
         error: (error) => {
           console.error('Error al actualizar estudiante:', error);
           alert('Error al actualizar el estudiante');
-        }
+        },
       });
     } else {
-      // CREATE
+      // 🆕 CREATE
       const payload: CreateEstudianteRequest = { ...this.estudianteForm };
-
       this.estudianteService.createEstudiante(payload).subscribe({
         next: () => {
           this.loadEstudiantes();
@@ -186,11 +208,12 @@ export class EstudianteListComponent implements OnInit {
         error: (error) => {
           console.error('Error al crear estudiante:', error);
           alert('Error al crear el estudiante');
-        }
+        },
       });
     }
   }
 
+  // ----- ELIMINAR -----
   deleteEstudiante(estudiante: Estudiante): void {
     if (confirm(`¿Está seguro de eliminar al estudiante "${estudiante.nombre}"?`)) {
       this.estudianteService.deleteEstudiante(estudiante.id).subscribe({
@@ -199,7 +222,7 @@ export class EstudianteListComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al eliminar estudiante:', error);
-        }
+        },
       });
     }
   }

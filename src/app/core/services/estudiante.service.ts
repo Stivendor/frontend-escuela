@@ -2,64 +2,63 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse, PaginatedResponse, PaginationParams } from '../models/api-response.model';
-
-// Si tienes un modelo específico para Estudiante, puedes importarlo así:
-// import { Estudiante, CreateEstudianteRequest, UpdateEstudianteRequest, EstudianteFilters } from '../../shared/models/estudiante.model';
+import { Estudiante, CreateEstudianteRequest, UpdateEstudianteRequest, EstudianteFilters } from '../../shared/models/estudiante.model';
+import { Materia, MateriaFilters } from 'src/app/shared/models/materia.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EstudianteService {
-  private readonly endpoint = '/estudiantes/';
+  private readonly endpoint = '/estudiantes';
 
   constructor(private apiService: ApiService) { }
 
   /**
    * Obtiene todos los estudiantes con paginación
    */
-  getEstudiantes(pagination: PaginationParams, filters?: any): Observable<PaginatedResponse<any>> {
-    return this.apiService.getPaginated<any>(this.endpoint, pagination, filters);
+  getEstudiantes(pagination: PaginationParams, filters?: EstudianteFilters): Observable<PaginatedResponse<Estudiante>> {
+    return this.apiService.getPaginated<Estudiante>(this.endpoint, pagination, filters);
   }
 
   /**
    * Obtiene un estudiante por ID
    */
-  getEstudianteById(id: number): Observable<ApiResponse<any>> {
-    return this.apiService.get<any>(`${this.endpoint}/${id}`);
+  getEstudianteById(id: string): Observable<ApiResponse<Estudiante>> {
+    return this.apiService.get<Estudiante>(`${this.endpoint}/${id}`);
   }
 
   /**
    * Crea un nuevo estudiante
    */
-  createEstudiante(estudiante: any): Observable<ApiResponse<any>> {
-    return this.apiService.post<any>(this.endpoint, estudiante);
+  createEstudiante(estudiante: CreateEstudianteRequest): Observable<ApiResponse<Estudiante>> {
+    return this.apiService.post<Estudiante>(this.endpoint, estudiante);
   }
 
   /**
    * Actualiza un estudiante existente
    */
-  updateEstudiante(id: number, estudiante: any): Observable<ApiResponse<any>> {
-    return this.apiService.put<any>(`${this.endpoint}/${id}`, estudiante);
+  updateEstudiante(id: string, estudiante: UpdateEstudianteRequest): Observable<ApiResponse<Estudiante>> {
+    return this.apiService.put<Estudiante>(`${this.endpoint}/${id}`, estudiante);
   }
 
   /**
    * Elimina un estudiante
    */
-  deleteEstudiante(id: number): Observable<ApiResponse<void>> {
+  deleteEstudiante(id: string): Observable<ApiResponse<void>> {
     return this.apiService.delete<void>(`${this.endpoint}/${id}`);
   }
 
   /**
    * Obtiene todos los estudiantes activos (sin paginación)
    */
-  getEstudiantesActivos(): Observable<ApiResponse<any[]>> {
-    return this.apiService.get<any[]>(`${this.endpoint}/activos`);
+  getEstudiantesActivos(): Observable<ApiResponse<Estudiante[]>> {
+    return this.apiService.get<Estudiante[]>(`${this.endpoint}/activos`);
   }
 
   /**
    * Activa o desactiva un estudiante
    */
-  toggleEstudianteStatus(id: number, activo: boolean): Observable<ApiResponse<any>> {
-    return this.apiService.patch<any>(`${this.endpoint}/${id}/toggle-status`, { activo });
+  toggleEstudianteStatus(id: string, activo: boolean): Observable<ApiResponse<Estudiante>> {
+    return this.apiService.patch<Estudiante>(`${this.endpoint}/${id}/toggle-status`, { activo });
   }
 }
