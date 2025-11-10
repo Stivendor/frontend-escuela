@@ -45,64 +45,71 @@ export class MateriaListComponent implements OnInit {
   }
 
   loadMaterias(): void {
-    this.loading = true;
-    const pagination: PaginationParams = {
-      page: this.currentPage,
-      limit: this.pageSize,
-    };
+  this.loading = true;
+  const pagination: PaginationParams = {
+    page: this.currentPage,
+    limit: this.pageSize,
+  };
 
-    this.materiaService.getMaterias(pagination, this.filters).subscribe({
-      next: (response: any) => {
-        console.log('Respuesta cruda materias:', response);
+  // ✅ Filtros vacíos o específicos para materias
+  const materiaFilters = {}; // o usa { activo: true } si quieres solo las activas
 
-        // Aceptar array directo o objeto { data, ... }
-        const data = Array.isArray(response) ? response : response.data ?? response;
+  this.materiaService.getMaterias(pagination, materiaFilters).subscribe({
+    next: (response: any) => {
+      console.log('Respuesta cruda materias:', response);
 
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-          console.warn('No se recibieron materias desde el backend. Usando fallback temporal.');
-          // Fallback temporal para ver la UI mientras debuggeas
-          this.materias = [
-            {
-              id: 'local-1',
-              nombre: 'Matemáticas Básicas',
-              codigo: 'MAT-101',
-              creditos: 4,
-              profesor_id: null,
-              profesor_nombre: '',
-              activo: true,
-              fecha_creacion: new Date().toISOString(),
-              fecha_actualizacion: new Date().toISOString()
-            }
-          ] as any;
-          this.totalPages = 1;
-          this.loading = false;
-          return;
-        }
+      const data = Array.isArray(response) ? response : response.data ?? response;
 
-        // Mapear campos a nuestro modelo frontal (resiliente a diferentes nombres desde backend)
-        this.materias = (data as any[]).map((m: any) => ({
-          id: m.id_materia ?? m.id ?? m.idMateria ?? '',
-          nombre: m.nombre ?? m.titulo ?? m.nombre_materia ?? '',
-          codigo: m.codigo ?? m.sigla ?? m.codigo_materia ?? '',
-          creditos: m.creditos ?? m.creditos_horas ?? m.creditos_totales ?? 0,
-          profesor_id: m.profesor_id ?? m.profesor?.id ?? m.docente_id ?? null,
-          profesor_nombre: m.profesor?.persona?.nombre ?? m.profesor?.nombre ?? m.docente?.nombre ?? '',
-          activo: m.activo ?? m.is_active ?? true,
-          fecha_creacion: m.fecha_creacion ?? m.created_at,
-          fecha_actualizacion: m.fecha_edicion ?? m.updated_at
-        })) as Materia[];
-
-        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        console.warn('No se recibieron materias desde el backend. Usando fallback temporal.');
+        this.materias = [
+          {
+            id: 'local-1',
+            nombre: 'Matemáticas Básicas',
+            codigo: 'MAT-101',
+            creditos: 4,
+            profesor_id: null,
+            profesor_nombre: '',
+            activo: true,
+            fecha_creacion: new Date().toISOString(),
+            fecha_actualizacion: new Date().toISOString(),
+          },
+        ] as any;
+        this.totalPages = 1;
         this.loading = false;
-        console.log('✅ Materias mapeadas:', this.materias);
-      },
-      error: (error) => {
-        console.error('Error al cargar materias:', error);
-        this.materias = [];
-        this.loading = false;
-      },
-    });
-  }
+        return;
+      }
+
+      this.materias = (data as any[]).map((m: any) => ({
+        id: m.id_materia ?? m.id ?? m.idMateria ?? '',
+        nombre: m.nombre ?? m.titulo ?? m.nombre_materia ?? '',
+        codigo: m.codigo ?? m.sigla ?? m.codigo_materia ?? '',
+        creditos: m.creditos ?? m.creditos_horas ?? m.creditos_totales ?? 0,
+        profesor_id: m.profesor_id ?? m.profesor?.id ?? m.docente_id ?? null,
+        profesor_nombre:
+          m.profesor?.persona?.nombre ??
+          m.profesor?.nombre ??
+          m.docente?.nombre ??
+          '',
+        activo: m.activo ?? m.is_active ?? true,
+        fecha_creacion: m.fecha_creacion ?? m.created_at,
+        fecha_actualizacion: m.fecha_edicion ?? m.updated_at,
+      })) as Materia[];
+
+      this.totalPages = response.total_pages ?? response.totalPages ?? 1;
+      this.loading = false;
+      console.log('✅ Materias mapeadas:', this.materias);
+    },
+    error: (error) => {
+      console.error('Error al cargar materias:', error);
+      this.materias = [];
+      this.loading = false;
+    },
+  });
+}
+
+
+
 
   onFilterChange(): void {
     this.currentPage = 1;
