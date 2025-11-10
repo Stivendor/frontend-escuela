@@ -1,7 +1,7 @@
 // src/app/shared/models/estudiante.model.ts
 
 export interface Estudiante {
-  id: number;
+  id: string;
   nombre: string;
   carrera: string;
   email: string;
