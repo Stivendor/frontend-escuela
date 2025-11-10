@@ -1,7 +1,7 @@
 // src/app/shared/models/profesor.model.ts
 
 export interface Profesor {
-  id: number;
+  id: string;
   nombre: string;
   especialidad: string;
   email: string;

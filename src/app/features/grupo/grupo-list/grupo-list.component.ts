@@ -207,12 +207,13 @@ loadProfesores(): void {
   this.loading = true;
   const pagination: PaginationParams = {
     page: this.currentPage,
-    limit: this.pageSize
+    limit: this.pageSize,
   };
 
-  this.profesorService.getProfesores(pagination, this.filters).subscribe({
+  const profesorFilters = { activo: true }; // 👈 tipo correcto
+
+  this.profesorService.getProfesores(pagination, profesorFilters).subscribe({
     next: (response: any) => {
-      // Manejo de respuesta del backend
       const data = Array.isArray(response) ? response : response.data;
 
       if (!data) {
@@ -221,7 +222,6 @@ loadProfesores(): void {
         return;
       }
 
-      // Adaptar los datos al modelo del front
       this.profesores = data.map((p: any) => ({
         id: p.id_profesor,
         nombre: p.persona?.nombre || '',
@@ -229,7 +229,7 @@ loadProfesores(): void {
         email: p.persona?.email || '',
         telefono: p.persona?.telefono || '',
         departamento: p.departamento,
-        activo: true,
+        activo: p.activo ?? true,
         fecha_creacion: p.persona?.fecha_creacion,
         fecha_actualizacion: p.persona?.fecha_edicion
       }));
@@ -243,6 +243,7 @@ loadProfesores(): void {
     }
   });
 }
+
 
 
   // === Filtros ===

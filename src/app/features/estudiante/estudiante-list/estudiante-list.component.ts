@@ -19,12 +19,16 @@ import {
 })
 export class EstudianteListComponent implements OnInit {
   estudiantes: Estudiante[] = [];
+  allEstudiantes: Estudiante[] = []; // 👈 copia completa
   loading = false;
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
 
-  filters: EstudianteFilters = {};
+  filters: EstudianteFilters = {
+    nombre: '',
+    activo: undefined,
+  };
 
   // Modal
   showModal = false;
@@ -44,6 +48,9 @@ export class EstudianteListComponent implements OnInit {
     this.loadEstudiantes();
   }
 
+  // ================================
+  // 🚀 CARGAR ESTUDIANTES
+  // ================================
   loadEstudiantes(): void {
     this.loading = true;
 
@@ -52,23 +59,16 @@ export class EstudianteListComponent implements OnInit {
       limit: this.pageSize,
     };
 
-    // Filtros (puedes agregar condiciones como { activo: true } si deseas)
-    const estudianteFilters = this.filters;
-
-    this.estudianteService.getEstudiantes(pagination, estudianteFilters).subscribe({
+    this.estudianteService.getEstudiantes(pagination, {}).subscribe({
       next: (response: any) => {
         console.log('📥 Respuesta cruda estudiantes:', response);
 
-        // Adapta diferentes estructuras del backend
         const data =
           Array.isArray(response) ? response :
-          response.data ??
-          response.results ??
-          response.estudiantes ??
-          response;
+          response.data ?? response.results ?? response.estudiantes ?? response;
 
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-          console.warn('⚠️ No se recibieron estudiantes desde el backend. Cargando ejemplo temporal.');
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No se recibieron estudiantes. Cargando ejemplo local.');
           this.estudiantes = [
             {
               id: 'local-1',
@@ -81,13 +81,13 @@ export class EstudianteListComponent implements OnInit {
               fecha_creacion: new Date().toISOString(),
               fecha_actualizacion: new Date().toISOString(),
             },
-          ] as Estudiante[];
+          ];
+          this.allEstudiantes = [...this.estudiantes];
           this.totalPages = 1;
           this.loading = false;
           return;
         }
 
-        // ✅ Mapeo robusto al modelo front
         this.estudiantes = (data as any[]).map((e: any) => ({
           id: e.id_estudiante ?? e.id ?? e.estudiante_id ?? '',
           nombre: e.persona?.nombre ?? e.nombre ?? '',
@@ -98,7 +98,10 @@ export class EstudianteListComponent implements OnInit {
           activo: e.activo ?? e.is_active ?? true,
           fecha_creacion: e.fecha_creacion ?? e.created_at ?? null,
           fecha_actualizacion: e.fecha_edicion ?? e.updated_at ?? null,
-        })) as Estudiante[];
+        }));
+
+        // 👇 guardamos copia para búsqueda local
+        this.allEstudiantes = [...this.estudiantes];
 
         this.totalPages = response.total_pages ?? response.totalPages ?? 1;
         this.loading = false;
@@ -112,19 +115,29 @@ export class EstudianteListComponent implements OnInit {
     });
   }
 
-  // ----- FILTROS -----
+  // ================================
+  // 🔍 FILTROS (buscador + activo)
+  // ================================
   onFilterChange(): void {
-    this.currentPage = 1;
-    this.loadEstudiantes();
+    const nombreFiltro = this.filters.nombre?.toLowerCase().trim() || '';
+    const activoFiltro = this.filters.activo;
+
+    this.estudiantes = this.allEstudiantes.filter((e) => {
+      const coincideNombre = e.nombre.toLowerCase().includes(nombreFiltro);
+      const coincideActivo =
+        activoFiltro === undefined ? true : e.activo === activoFiltro;
+      return coincideNombre && coincideActivo;
+    });
   }
 
   clearFilters(): void {
-    this.filters = {};
-    this.currentPage = 1;
-    this.loadEstudiantes();
+    this.filters = { nombre: '', activo: undefined };
+    this.estudiantes = [...this.allEstudiantes];
   }
 
-  // ----- PAGINACIÓN -----
+  // ================================
+  // 📄 PAGINACIÓN
+  // ================================
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
@@ -132,7 +145,9 @@ export class EstudianteListComponent implements OnInit {
     }
   }
 
-  // ----- MODAL -----
+  // ================================
+  // 🧱 MODAL
+  // ================================
   openCreateModal(): void {
     this.editingEstudiante = null;
     this.estudianteForm = {
@@ -172,7 +187,9 @@ export class EstudianteListComponent implements OnInit {
     };
   }
 
-  // ----- GUARDAR -----
+  // ================================
+  // 💾 GUARDAR
+  // ================================
   saveEstudiante(): void {
     if (
       !this.estudianteForm.nombre.trim() ||
@@ -185,7 +202,6 @@ export class EstudianteListComponent implements OnInit {
     }
 
     if (this.editingEstudiante) {
-      // 🔄 UPDATE
       const payload: UpdateEstudianteRequest = { ...this.estudianteForm };
       this.estudianteService.updateEstudiante(this.editingEstudiante.id, payload).subscribe({
         next: () => {
@@ -198,7 +214,6 @@ export class EstudianteListComponent implements OnInit {
         },
       });
     } else {
-      // 🆕 CREATE
       const payload: CreateEstudianteRequest = { ...this.estudianteForm };
       this.estudianteService.createEstudiante(payload).subscribe({
         next: () => {
@@ -213,7 +228,9 @@ export class EstudianteListComponent implements OnInit {
     }
   }
 
-  // ----- ELIMINAR -----
+  // ================================
+  // 🗑️ ELIMINAR
+  // ================================
   deleteEstudiante(estudiante: Estudiante): void {
     if (confirm(`¿Está seguro de eliminar al estudiante "${estudiante.nombre}"?`)) {
       this.estudianteService.deleteEstudiante(estudiante.id).subscribe({
