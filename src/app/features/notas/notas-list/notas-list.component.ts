@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
 import { NotaService } from '../../../core/services/nota.service';
 import { Nota, NotaFilters, CreateNotaRequest } from '../../../shared/models/nota.model';
+import { ApiService } from '../../../core/services/api.service'; // ✅ servicio genérico para llamadas
 
 @Component({
   selector: 'app-notas-list',
@@ -32,12 +33,46 @@ export class NotasListComponent implements OnInit {
     activo: true
   };
 
-  constructor(private notaService: NotaService) {}
+  // ✅ Nuevos arreglos para las listas desplegables
+  materias: any[] = [];
+  estudiantes: any[] = [];
+  profesores: any[] = [];
+
+  constructor(
+    private notaService: NotaService,
+    private api: ApiService // Servicio para cargar materias, estudiantes y profesores
+  ) {}
 
   ngOnInit(): void {
     this.loadNotas();
   }
 
+  // ✅ Cargar listas relacionadas
+  loadRelatedData(): void {
+  this.api.get('/materias').subscribe({
+    next: (res: any) => {
+      this.materias = Array.isArray(res) ? res : res.data ?? [];
+    },
+    error: (err) => console.error('Error al cargar materias:', err)
+  });
+
+  this.api.get('/estudiantes').subscribe({
+    next: (res: any) => {
+      this.estudiantes = Array.isArray(res) ? res : res.data ?? [];
+    },
+    error: (err) => console.error('Error al cargar estudiantes:', err)
+  });
+
+  this.api.get('/profesores').subscribe({
+    next: (res: any) => {
+      this.profesores = Array.isArray(res) ? res : res.data ?? [];
+    },
+    error: (err) => console.error('Error al cargar profesores:', err)
+  });
+}
+
+
+  // ✅ Cargar todas las notas
   loadNotas(): void {
     this.loading = true;
     const pagination: PaginationParams = {
@@ -47,10 +82,11 @@ export class NotasListComponent implements OnInit {
 
     this.notaService.getNotas(pagination, this.filters).subscribe({
       next: (response: any) => {
-        console.log('Respuesta cruda notas:', response); // <- ver estructura
+        console.log('Respuesta cruda notas:', response);
 
-        // Aceptar array directo o objeto { data, ... }
-        const data = Array.isArray(response) ? response : response.data ?? response;
+        const data = Array.isArray(response)
+          ? response
+          : response.data ?? response;
 
         if (!data || (Array.isArray(data) && data.length === 0)) {
           console.warn('No se recibieron notas desde el backend. Usando fallback temporal.');
@@ -71,7 +107,7 @@ export class NotasListComponent implements OnInit {
           return;
         }
 
-        // Mapear los campos a nuestro modelo frontal de forma resiliente
+        // ✅ Mapear estructura
         this.notas = (data as any[]).map((n: any) => ({
           id: n.id_nota ?? n.id ?? '',
           materia_id: n.materia_id ?? n.id_materia ?? n.materia?.id ?? 0,
@@ -82,8 +118,6 @@ export class NotasListComponent implements OnInit {
           activo: n.activo ?? n.is_active ?? true,
           fecha_creacion: n.fecha_creacion ?? n.created_at,
           fecha_actualizacion: n.fecha_edicion ?? n.updated_at,
-
-          // <- nombres para mostrar en el grid (fíjate en los posibles paths)
           materia_nombre: n.materia?.nombre ?? n.materia_nombre ?? n.nombre_materia ?? n.materia?.titulo ?? '',
           estudiante_nombre: n.estudiante?.persona?.nombre ?? n.estudiante_nombre ?? n.nombre_estudiante ?? n.estudiante?.nombre ?? '',
           profesor_nombre: n.profesor?.persona?.nombre ?? n.profesor_nombre ?? n.nombre_profesor ?? n.profesor?.nombre ?? ''
@@ -101,6 +135,7 @@ export class NotasListComponent implements OnInit {
     });
   }
 
+  // ✅ Filtros
   onFilterChange(): void {
     this.currentPage = 1;
     this.loadNotas();
@@ -119,30 +154,36 @@ export class NotasListComponent implements OnInit {
     }
   }
 
+  // ✅ Abrir modal de creación
   openCreateModal(): void {
-    this.editingNota = null;
-    this.notaForm = {
-      materia_id: 0,
-      estudiante_id: 0,
-      profesor_id: 0,
-      valor: 0,
-      activo: true
-    };
-    this.showModal = true;
-  }
+  this.editingNota = null;
+  this.notaForm = {
+    materia_id: 0,
+    estudiante_id: 0,
+    profesor_id: 0, // lo puedes dejar aquí solo para el select
+    valor: 0,
+    activo: true
+  };
+  this.loadRelatedData();
+  this.showModal = true;
+}
 
-  editNota(nota: Nota): void {
-    this.editingNota = nota;
-    this.notaForm = {
-      materia_id: nota.materia_id,
-      estudiante_id: nota.estudiante_id,
-      profesor_id: nota.profesor_id,
-      valor: nota.valor,
-      activo: nota.activo
-    };
-    this.showModal = true;
-  }
+editNota(nota: Nota): void {
+  this.editingNota = nota;
+  this.notaForm = {
+    materia_id: nota.materia_id,
+    estudiante_id: nota.estudiante_id,
+    profesor_id: nota.profesor_id ?? 0, // solo visual
+    valor: nota.valor,
+    activo: nota.activo
+  };
+  this.loadRelatedData();
+  this.showModal = true;
+}
 
+
+
+  // ✅ Cerrar modal
   closeModal(): void {
     this.showModal = false;
     this.editingNota = null;
@@ -155,44 +196,94 @@ export class NotasListComponent implements OnInit {
     };
   }
 
+  // ✅ Guardar nota
   saveNota(): void {
-    if (
-      !this.notaForm.materia_id ||
-      !this.notaForm.estudiante_id ||
-      !this.notaForm.profesor_id ||
-      this.notaForm.valor <= 0
-    ) {
-      alert('Todos los campos son obligatorios');
-      return;
-    }
-
-    if (this.editingNota) {
-      const updateData = { ...this.notaForm };
-      this.notaService.updateNota(this.editingNota.id, updateData).subscribe({
-        next: () => {
-          this.loadNotas();
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('Error al actualizar la nota:', error);
-          alert('Error al actualizar la nota');
-        }
-      });
-    } else {
-      const newNota = { ...this.notaForm };
-      this.notaService.createNota(newNota).subscribe({
-        next: () => {
-          this.loadNotas();
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('Error al crear la nota:', error);
-          alert('Error al crear la nota');
-        }
-      });
-    }
+  // ✅ Validación básica antes de enviar
+  if (
+    !this.notaForm.materia_id ||
+    !this.notaForm.estudiante_id ||
+    this.notaForm.valor <= 0
+  ) {
+    alert('Materia, estudiante y valor son obligatorios');
+    return;
   }
 
+  // ✅ Si estamos editando una nota existente
+  if (this.editingNota) {
+  // 🔹 Aseguramos obtener correctamente el ID de la nota
+  const idNota =
+    this.editingNota.id_nota ||
+    this.editingNota.id ||
+    (this.editingNota as any).idNota;
+
+  if (!idNota) {
+    alert('Error: No se encontró el ID de la nota para actualizar.');
+    return;
+  }
+
+  // 🔹 Enviamos todos los campos que el backend ahora acepta
+  const payload = {
+    valor: this.notaForm.valor,
+    materia_id: this.notaForm.materia_id,
+    estudiante_id: this.notaForm.estudiante_id,
+    profesor_id: this.notaForm.profesor_id,
+    activo: this.notaForm.activo
+  };
+
+  console.log('Actualizando nota ID:', idNota, 'con payload:', payload);
+
+  this.notaService.updateNota(idNota, payload).subscribe({
+    next: () => {
+      alert('✅ Nota actualizada correctamente');
+      this.loadNotas();
+      this.closeModal();
+    },
+    error: (error) => {
+      console.error('Error al actualizar la nota:', error);
+      let msg = 'Error al actualizar la nota';
+      if (error?.error?.detail) {
+        msg =
+          typeof error.error.detail === 'string'
+            ? error.error.detail
+            : JSON.stringify(error.error.detail);
+      }
+      alert(msg);
+    }
+  });
+}
+
+
+  // ✅ Si estamos creando una nueva nota
+  else {
+    const payload = {
+      materia_id: this.notaForm.materia_id,
+      estudiante_id: this.notaForm.estudiante_id,
+      valor: this.notaForm.valor
+    };
+
+    this.notaService.createNota(payload).subscribe({
+      next: () => {
+        alert('✅ Nota creada correctamente');
+        this.loadNotas();
+        this.closeModal();
+      },
+      error: (error) => {
+        console.error('Error al crear la nota:', error);
+        let msg = 'Error al crear la nota';
+        if (error?.error?.detail) {
+          msg =
+            typeof error.error.detail === 'string'
+              ? error.error.detail
+              : JSON.stringify(error.error.detail);
+        }
+        alert(msg);
+      }
+    });
+  }
+}
+
+
+  // ✅ Eliminar nota
   deleteNota(nota: Nota): void {
     if (confirm(`¿Está seguro de eliminar la nota con ID ${nota.id}?`)) {
       this.notaService.deleteNota(nota.id).subscribe({

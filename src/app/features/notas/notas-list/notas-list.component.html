@@ -92,97 +92,108 @@
     </div>
   </div>
 
-  <!-- Modal -->
-  <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">{{ editingNota ? 'Editar Nota' : 'Nueva Nota' }}</h5>
-          <button type="button" class="close" (click)="closeModal()"><span>&times;</span></button>
-        </div>
+<!-- Modal -->
+<div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editingNota ? 'Editar Nota' : 'Nueva Nota' }}</h5>
+        <button type="button" class="close" (click)="closeModal()"><span>&times;</span></button>
+      </div>
 
-        <div class="modal-body">
-          <form (ngSubmit)="saveNota()">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="materia_id">Materia *</label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="materia_id" 
-                    [(ngModel)]="notaForm.materia_id" 
-                    name="materia_id"
-                    required
-                  >
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="valor">Valor *</label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="valor" 
-                    [(ngModel)]="notaForm.valor" 
-                    name="valor"
-                    required
-                    min="0"
-                  >
-                </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveNota()">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="materia_id">Materia *</label>
+                <select
+                  id="materia_id"
+                  class="form-control"
+                  [(ngModel)]="notaForm.materia_id"
+                  name="materia_id"
+                  required
+                >
+                  <option value="">Seleccione una materia</option>
+                  <option *ngFor="let materia of materias" [ngValue]="materia.id_materia ?? materia.id">
+                    {{ materia.nombre }}
+                  </option>
+                </select>
               </div>
             </div>
 
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="estudiante_id">Estudiante *</label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="estudiante_id" 
-                    [(ngModel)]="notaForm.estudiante_id" 
-                    name="estudiante_id"
-                    required
-                  >
-                </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="valor">Valor *</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="valor"
+                  [(ngModel)]="notaForm.valor"
+                  name="valor"
+                  required
+                  min="0"
+                >
               </div>
+            </div>
+          </div>
 
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="profesor_id">Profesor *</label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    id="profesor_id" 
-                    [(ngModel)]="notaForm.profesor_id" 
-                    name="profesor_id"
-                    required
-                  >
-                </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="estudiante_id">Estudiante *</label>
+                <select
+                  id="estudiante_id"
+                  class="form-control"
+                  [(ngModel)]="notaForm.estudiante_id"
+                  name="estudiante_id"
+                  required
+                >
+                  <option value="">Seleccione un estudiante</option>
+                  <option *ngFor="let estudiante of estudiantes" [ngValue]="estudiante.id_estudiante ?? estudiante.id">
+                    {{ estudiante.persona?.nombre }}
+                  </option>
+                </select>
               </div>
             </div>
 
-            <div class="form-check">
-              <input 
-                type="checkbox"
-                class="form-check-input"
-                id="activo"
-                [(ngModel)]="notaForm.activo"
-                name="activo"
-              >
-              <label class="form-check-label" for="activo">Nota activa</label>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="profesor_id">Profesor *</label>
+                <select
+                  id="profesor_id"
+                  class="form-control"
+                  [(ngModel)]="notaForm.profesor_id"
+                  name="profesor_id"
+                  required
+                >
+                  <option value="">Seleccione un profesor</option>
+                  <option *ngFor="let profesor of profesores" [ngValue]="profesor.id_profesor ?? profesor.id">
+                    {{ profesor.persona?.nombre }}
+                  </option>
+                </select>
+              </div>
             </div>
-          </form>
-        </div>
+          </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-          <button type="button" class="btn btn-primary" (click)="saveNota()">
-            {{ editingNota ? 'Actualizar' : 'Crear' }}
-          </button>
-        </div>
+          <div class="form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              id="activo"
+              [(ngModel)]="notaForm.activo"
+              name="activo"
+            >
+            <label class="form-check-label" for="activo">Nota activa</label>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveNota()">
+          {{ editingNota ? 'Actualizar' : 'Crear' }}
+        </button>
       </div>
     </div>
   </div>
