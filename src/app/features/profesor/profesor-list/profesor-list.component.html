@@ -20,26 +20,19 @@
               (input)="onFilterChange()"
             >
           </div>
-          <div class="col-md-3">
-            <input
-              type="text"
-              class="form-control"
-              placeholder="Buscar por especialidad..."
-              [(ngModel)]="filters.especialidad"
-              (input)="onFilterChange()"
-            >
-          </div>
           <div class="col-md-2">
             <select
               class="form-control"
               [(ngModel)]="filters.activo"
               (change)="onFilterChange()"
             >
-              <option value="">Todos los estados</option>
-              <option value="true">Activos</option>
-              <option value="false">Inactivos</option>
+              <option [ngValue]="undefined">Todos los estados</option>
+              <option [ngValue]="true">Activos</option>
+              <option [ngValue]="false">Inactivos</option>
             </select>
+
           </div>
+          
           <div class="col-md-2">
             <button class="btn btn-secondary" (click)="clearFilters()">
               Limpiar
