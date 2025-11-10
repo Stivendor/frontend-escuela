@@ -8,7 +8,7 @@ import { Nota, CreateNotaRequest, UpdateNotaRequest, NotaFilters } from '../../s
   providedIn: 'root'
 })
 export class NotaService {
-  private readonly endpoint = '/notas/';
+  private readonly endpoint = '/notas';
 
   constructor(private apiService: ApiService) {}
 

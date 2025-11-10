@@ -208,59 +208,73 @@ editNota(nota: Nota): void {
     return;
   }
 
-  // ✅ Armamos el payload que espera el backend (UUIDs como strings)
-  const payload = {
-    materia_id: this.notaForm.materia_id,      // UUID string
-    estudiante_id: this.notaForm.estudiante_id, // UUID string
-    valor: this.notaForm.valor
-  };
-
   // ✅ Si estamos editando una nota existente
   if (this.editingNota) {
-    this.notaService
-      .updateNota(this.editingNota.id, { valor: this.notaForm.valor })
-      .subscribe({
-        next: () => {
-          this.loadNotas();
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('Error al actualizar la nota:', error);
+  // 🔹 Aseguramos obtener correctamente el ID de la nota
+  const idNota =
+    this.editingNota.id_nota ||
+    this.editingNota.id ||
+    (this.editingNota as any).idNota;
 
-          let msg = 'Error al actualizar la nota';
-          if (error?.error?.detail) {
-            if (Array.isArray(error.error.detail)) {
-              msg = error.error.detail
-                .map((d: any) => `${d.loc?.join('.') ?? ''}: ${d.msg}`)
-                .join('\n');
-            } else if (typeof error.error.detail === 'string') {
-              msg = error.error.detail;
-            }
-          }
-          alert(msg);
-        }
-      });
-  } 
+  if (!idNota) {
+    alert('Error: No se encontró el ID de la nota para actualizar.');
+    return;
+  }
+
+  // 🔹 Enviamos todos los campos que el backend ahora acepta
+  const payload = {
+    valor: this.notaForm.valor,
+    materia_id: this.notaForm.materia_id,
+    estudiante_id: this.notaForm.estudiante_id,
+    profesor_id: this.notaForm.profesor_id,
+    activo: this.notaForm.activo
+  };
+
+  console.log('Actualizando nota ID:', idNota, 'con payload:', payload);
+
+  this.notaService.updateNota(idNota, payload).subscribe({
+    next: () => {
+      alert('✅ Nota actualizada correctamente');
+      this.loadNotas();
+      this.closeModal();
+    },
+    error: (error) => {
+      console.error('Error al actualizar la nota:', error);
+      let msg = 'Error al actualizar la nota';
+      if (error?.error?.detail) {
+        msg =
+          typeof error.error.detail === 'string'
+            ? error.error.detail
+            : JSON.stringify(error.error.detail);
+      }
+      alert(msg);
+    }
+  });
+}
+
+
   // ✅ Si estamos creando una nueva nota
   else {
+    const payload = {
+      materia_id: this.notaForm.materia_id,
+      estudiante_id: this.notaForm.estudiante_id,
+      valor: this.notaForm.valor
+    };
+
     this.notaService.createNota(payload).subscribe({
       next: () => {
+        alert('✅ Nota creada correctamente');
         this.loadNotas();
         this.closeModal();
       },
       error: (error) => {
         console.error('Error al crear la nota:', error);
-
-        // 🔹 Formatear mensajes legibles desde FastAPI
         let msg = 'Error al crear la nota';
         if (error?.error?.detail) {
-          if (Array.isArray(error.error.detail)) {
-            msg = error.error.detail
-              .map((d: any) => `${d.loc?.join('.') ?? ''}: ${d.msg}`)
-              .join('\n');
-          } else if (typeof error.error.detail === 'string') {
-            msg = error.error.detail;
-          }
+          msg =
+            typeof error.error.detail === 'string'
+              ? error.error.detail
+              : JSON.stringify(error.error.detail);
         }
         alert(msg);
       }

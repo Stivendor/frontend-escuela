@@ -1,10 +1,11 @@
 export interface Nota {
   id: number | string;
+  id_nota?: string;  // 👈 añade esta línea opcional
   materia_id: number | string;
   estudiante_id: number | string;
-  profesor_id?: number | string; // puede ser null en el backend
+  profesor_id: number | string;
   valor: number;
-  activo?: boolean; // opcional para evitar errores
+  activo: boolean;
 
   // Relaciones opcionales
   estudiante?: {
@@ -20,12 +21,10 @@ export interface Nota {
     nombre: string;
   };
 
-  // 👇 Campos agregados para mostrar nombres directamente en la tabla
   materia_nombre?: string;
   estudiante_nombre?: string;
   profesor_nombre?: string;
 
-  // Campos de auditoría (opcionalmente)
   fecha_creacion?: string;
   fecha_actualizacion?: string;
   comentario?: string;
