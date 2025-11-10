@@ -150,7 +150,7 @@ loadGrupos(): void {
       limit: this.pageSize,
     };
 
-    this.materiaService.getMaterias(pagination, this.filters).subscribe({
+    this.materiaService.getMaterias(pagination, {}).subscribe({
       next: (response: any) => {
         console.log('Respuesta cruda materias:', response);
 
