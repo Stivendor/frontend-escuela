@@ -14,18 +14,17 @@
               type="text" 
               class="form-control" 
               placeholder="Buscar por materia..."
-              [(ngModel)]="filters.materia_id"
+              [(ngModel)]="filters.materia"
               (input)="onFilterChange()"
-            >
-          </div>
-          <div class="col-md-3">
+            />
+
             <input 
               type="text" 
               class="form-control" 
               placeholder="Buscar por estudiante..."
-              [(ngModel)]="filters.estudiante_id"
+              [(ngModel)]="filters.estudiante"
               (input)="onFilterChange()"
-            >
+            />
           </div>
           <div class="col-md-3">
             <select 

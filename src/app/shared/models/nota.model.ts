@@ -49,8 +49,7 @@ export interface UpdateNotaRequest {
 }
 
 export interface NotaFilters {
-  materia_id?: number | string;
-  estudiante_id?: number | string;
-  profesor_id?: number | string;
-  activo?: boolean;
+  materia?: string;
+  estudiante?: string;
+  activo?: boolean | string;
 }
