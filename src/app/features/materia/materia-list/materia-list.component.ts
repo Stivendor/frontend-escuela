@@ -52,7 +52,7 @@ export class MateriaListComponent implements OnInit {
     limit: this.pageSize,
   };
 
-  // ✅ Agregar el filtro por nombre si existe
+  // Agregar el filtro por nombre si existe
   const materiaFilters: MateriaFilters = {};
   if (this.nombreFiltro.trim()) {
     materiaFilters.nombre = this.nombreFiltro.trim();
@@ -91,7 +91,7 @@ export class MateriaListComponent implements OnInit {
 
       this.totalPages = response.total_pages ?? response.totalPages ?? 1;
       this.loading = false;
-      console.log('✅ Materias mapeadas:', this.materias);
+      console.log(' Materias mapeadas:', this.materias);
     },
     error: (error) => {
       console.error('Error al cargar materias:', error);

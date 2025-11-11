@@ -1,6 +1,6 @@
 export interface Nota {
   id: number | string;
-  id_nota?: string;  // 👈 añade esta línea opcional
+  id_nota?: string;
   materia_id: number | string;
   estudiante_id: number | string;
   profesor_id: number | string;
@@ -35,7 +35,7 @@ export interface CreateNotaRequest {
   estudiante_id: string | number;
   valor: number;
 
-  // 🔹 estos dos se dejan opcionales por compatibilidad
+  // estos dos se dejan opcionales por compatibilidad
   profesor_id?: string | number;
   activo?: boolean;
 }
