@@ -8,7 +8,7 @@ import { Nota, CreateNotaRequest, UpdateNotaRequest, NotaFilters } from '../../s
   providedIn: 'root'
 })
 export class NotaService {
-  private readonly endpoint = '/notas'; // ✅ sin barra al final
+  private readonly endpoint = '/notas'; // sin barra al final
 
   constructor(private apiService: ApiService) {}
 
@@ -30,16 +30,16 @@ export class NotaService {
    * Crea una nueva nota
    */
   createNota(nota: any): Observable<any> {
-    console.log('🟢 Enviando creación de nota:', nota);
-    return this.apiService.post<any>(this.endpoint, nota); // ✅ una sola barra
+    console.log(' Enviando creación de nota:', nota);
+    return this.apiService.post<any>(this.endpoint, nota); //  una sola barra
   }
 
   /**
    * Actualiza una nota existente
    */
   updateNota(id: string | number, nota: any): Observable<any> {
-    console.log('🟡 Enviando actualización de nota:', id, nota);
-    return this.apiService.put<any>(`${this.endpoint}/${id}`, nota); // ✅ correcto
+    console.log(' Enviando actualización de nota:', id, nota);
+    return this.apiService.put<any>(`${this.endpoint}/${id}`, nota); // correcto
   }
 
   /**

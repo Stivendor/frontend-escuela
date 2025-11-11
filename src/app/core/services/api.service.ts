@@ -31,31 +31,32 @@ export class ApiService {
    * Realiza una petición GET para obtener datos paginados
    */
   getPaginated<T>(endpoint: string, pagination: PaginationParams, filters?: any): Observable<PaginatedResponse<T>> {
-    let httpParams = new HttpParams();
-    
-    // Agregar parámetros de paginación
-    httpParams = httpParams.set('page', pagination.page.toString());
-    httpParams = httpParams.set('limit', pagination.limit.toString());
-    
-    if (pagination.sort) {
-      httpParams = httpParams.set('sort', pagination.sort);
-    }
-    
-    if (pagination.order) {
-      httpParams = httpParams.set('order', pagination.order);
-    }
-
-    // Agregar filtros
-    if (filters) {
-      Object.keys(filters).forEach(key => {
-        if (filters[key] !== null && filters[key] !== undefined) {
-          httpParams = httpParams.set(key, filters[key].toString());
-        }
-      });
-    }
-
-    return this.http.get<PaginatedResponse<T>>(`${this.baseUrl}${endpoint}`, { params: httpParams });
+  let httpParams = new HttpParams();
+  
+  // Agregar parámetros de paginación
+  httpParams = httpParams.set('page', pagination.page.toString());
+  httpParams = httpParams.set('limit', pagination.limit.toString());
+  
+  if (pagination.sort) {
+    httpParams = httpParams.set('sort', pagination.sort);
   }
+  
+  if (pagination.order) {
+    httpParams = httpParams.set('order', pagination.order);
+  }
+
+  // Agregar filtros (ignorando vacíos o undefined)
+  if (filters) {
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '') {
+        httpParams = httpParams.set(key, value.toString());
+      }
+    });
+  }
+
+  return this.http.get<PaginatedResponse<T>>(`${this.baseUrl}${endpoint}`, { params: httpParams });
+}
 
   /**
    * Realiza una petición POST

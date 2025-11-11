@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
 import { NotaService } from '../../../core/services/nota.service';
 import { Nota, NotaFilters, CreateNotaRequest } from '../../../shared/models/nota.model';
-import { ApiService } from '../../../core/services/api.service'; // ✅ servicio genérico para llamadas
+import { ApiService } from '../../../core/services/api.service'; //  servicio genérico para llamadas
 
 @Component({
   selector: 'app-notas-list',
@@ -33,7 +33,7 @@ export class NotasListComponent implements OnInit {
     activo: true
   };
 
-  // ✅ Nuevos arreglos para las listas desplegables
+  // Nuevos arreglos para las listas desplegables
   materias: any[] = [];
   estudiantes: any[] = [];
   profesores: any[] = [];
@@ -47,7 +47,7 @@ export class NotasListComponent implements OnInit {
     this.loadNotas();
   }
 
-  // ✅ Cargar listas relacionadas
+  // Cargar listas relacionadas
   loadRelatedData(): void {
   this.api.get('/materias').subscribe({
     next: (res: any) => {
@@ -72,7 +72,7 @@ export class NotasListComponent implements OnInit {
 }
 
 
-  // ✅ Cargar todas las notas
+  // Cargar todas las notas
   loadNotas(): void {
     this.loading = true;
     const pagination: PaginationParams = {
@@ -107,7 +107,7 @@ export class NotasListComponent implements OnInit {
           return;
         }
 
-        // ✅ Mapear estructura
+        // Mapear estructura
         this.notas = (data as any[]).map((n: any) => ({
           id: n.id_nota ?? n.id ?? '',
           materia_id: n.materia_id ?? n.id_materia ?? n.materia?.id ?? 0,
@@ -125,7 +125,7 @@ export class NotasListComponent implements OnInit {
 
         this.totalPages = response.total_pages ?? response.totalPages ?? 1;
         this.loading = false;
-        console.log('✅ Notas mapeadas:', this.notas);
+        console.log(' Notas mapeadas:', this.notas);
       },
       error: (error) => {
         console.error('Error al cargar notas:', error);
@@ -135,7 +135,7 @@ export class NotasListComponent implements OnInit {
     });
   }
 
-  // ✅ Filtros
+  // Filtros
   onFilterChange(): void {
     this.currentPage = 1;
     this.loadNotas();
@@ -154,7 +154,7 @@ export class NotasListComponent implements OnInit {
     }
   }
 
-  // ✅ Abrir modal de creación
+  // Abrir modal de creación
   openCreateModal(): void {
   this.editingNota = null;
   this.notaForm = {
@@ -183,7 +183,7 @@ editNota(nota: Nota): void {
 
 
 
-  // ✅ Cerrar modal
+  // Cerrar modal
   closeModal(): void {
     this.showModal = false;
     this.editingNota = null;
@@ -196,9 +196,9 @@ editNota(nota: Nota): void {
     };
   }
 
-  // ✅ Guardar nota
+  // Guardar nota
   saveNota(): void {
-  // ✅ Validación básica antes de enviar
+  // Validación básica antes de enviar
   if (
     !this.notaForm.materia_id ||
     !this.notaForm.estudiante_id ||
@@ -208,9 +208,9 @@ editNota(nota: Nota): void {
     return;
   }
 
-  // ✅ Si estamos editando una nota existente
+  // Si estamos editando una nota existente
   if (this.editingNota) {
-  // 🔹 Aseguramos obtener correctamente el ID de la nota
+  // Aseguramos obtener correctamente el ID de la nota
   const idNota =
     this.editingNota.id_nota ||
     this.editingNota.id ||
@@ -221,7 +221,7 @@ editNota(nota: Nota): void {
     return;
   }
 
-  // 🔹 Enviamos todos los campos que el backend ahora acepta
+  // Enviamos todos los campos que el backend ahora acepta
   const payload = {
     valor: this.notaForm.valor,
     materia_id: this.notaForm.materia_id,
@@ -234,7 +234,7 @@ editNota(nota: Nota): void {
 
   this.notaService.updateNota(idNota, payload).subscribe({
     next: () => {
-      alert('✅ Nota actualizada correctamente');
+      alert(' Nota actualizada correctamente');
       this.loadNotas();
       this.closeModal();
     },
@@ -253,7 +253,7 @@ editNota(nota: Nota): void {
 }
 
 
-  // ✅ Si estamos creando una nueva nota
+  // Si estamos creando una nueva nota
   else {
     const payload = {
       materia_id: this.notaForm.materia_id,
@@ -263,7 +263,7 @@ editNota(nota: Nota): void {
 
     this.notaService.createNota(payload).subscribe({
       next: () => {
-        alert('✅ Nota creada correctamente');
+        alert(' Nota creada correctamente');
         this.loadNotas();
         this.closeModal();
       },
@@ -283,7 +283,7 @@ editNota(nota: Nota): void {
 }
 
 
-  // ✅ Eliminar nota
+  // Eliminar nota
   deleteNota(nota: Nota): void {
     if (confirm(`¿Está seguro de eliminar la nota con ID ${nota.id}?`)) {
       this.notaService.deleteNota(nota.id).subscribe({

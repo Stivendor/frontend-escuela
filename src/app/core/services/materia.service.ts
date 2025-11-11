@@ -10,7 +10,7 @@ import { Materia, CreateMateriaRequest, UpdateMateriaRequest, MateriaFilters } f
   providedIn: 'root'
 })
 export class MateriaService {
-  // ✅ Sin barra final para evitar rutas dobles (//materias//id)
+  // Sin barra final para evitar rutas dobles (//materias//id)
   private readonly endpoint = '/materias';
 
   constructor(private apiService: ApiService) { }
