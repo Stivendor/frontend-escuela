@@ -10,16 +10,16 @@
       <div class="filters mb-3">
         <div class="row g-2 align-items-center">
           <div class="col-md-4">
-            <input 
-              type="text" 
+            <input
+              type="text"
               class="form-control"
               placeholder="Buscar por nombre..."
-              [(ngModel)]="filters.nombre"
+              [(ngModel)]="nombreFiltro"
               (input)="onFilterChange()"
             >
           </div>
           <div class="col-md-3">
-            <select 
+            <select
               class="form-select"
               [(ngModel)]="filters.activo"
               (change)="onFilterChange()"
@@ -30,10 +30,11 @@
             </select>
           </div>
           <div class="col-md-2">
-            <button class="btn btn-secondary" (click)="clearFilters()">Limpiar</button>
+            <button class="btn btn-secondary w-100" (click)="limpiarFiltro()">Limpiar</button>
           </div>
         </div>
       </div>
+
 
       <!-- Tabla -->
       <div class="table-responsive">

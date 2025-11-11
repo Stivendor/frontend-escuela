@@ -25,6 +25,7 @@ export class MateriaListComponent implements OnInit {
   pageSize = 10;
 
   filters: MateriaFilters = {};
+  nombreFiltro: string = '';
 
   // Modal
   showModal = false;
@@ -51,30 +52,22 @@ export class MateriaListComponent implements OnInit {
     limit: this.pageSize,
   };
 
-  // ✅ Filtros vacíos o específicos para materias
-  const materiaFilters = {}; // o usa { activo: true } si quieres solo las activas
+  // ✅ Agregar el filtro por nombre si existe
+  const materiaFilters: MateriaFilters = {};
+  if (this.nombreFiltro.trim()) {
+    materiaFilters.nombre = this.nombreFiltro.trim();
+  }
+
+  console.log('📤 Filtros enviados:', materiaFilters);
 
   this.materiaService.getMaterias(pagination, materiaFilters).subscribe({
     next: (response: any) => {
       console.log('Respuesta cruda materias:', response);
-
       const data = Array.isArray(response) ? response : response.data ?? response;
 
       if (!data || (Array.isArray(data) && data.length === 0)) {
         console.warn('No se recibieron materias desde el backend. Usando fallback temporal.');
-        this.materias = [
-          {
-            id: 'local-1',
-            nombre: 'Matemáticas Básicas',
-            codigo: 'MAT-101',
-            creditos: 4,
-            profesor_id: null,
-            profesor_nombre: '',
-            activo: true,
-            fecha_creacion: new Date().toISOString(),
-            fecha_actualizacion: new Date().toISOString(),
-          },
-        ] as any;
+        this.materias = [];
         this.totalPages = 1;
         this.loading = false;
         return;
@@ -109,12 +102,17 @@ export class MateriaListComponent implements OnInit {
 }
 
 
-
-
   onFilterChange(): void {
     this.currentPage = 1;
     this.loadMaterias();
   }
+
+  limpiarFiltro(): void {
+  this.nombreFiltro = '';
+  this.filters = {}; // opcional: limpia también el estado del select
+  this.loadMaterias();
+  }
+
 
   clearFilters(): void {
     this.filters = {};
