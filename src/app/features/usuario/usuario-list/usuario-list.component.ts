@@ -3,88 +3,126 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationParams } from '../../../core/models/api-response.model';
 import { UsuarioService } from '../../../core/services/usuario.service';
-import { Usuario, UsuarioFilters } from '../../../shared/models/usuario.model';
+import {
+  Usuario,
+  CreateUsuarioRequest,
+  UpdateUsuarioRequest,
+  UsuarioFilters,
+} from '../../../shared/models/usuario.model';
 
 @Component({
   selector: 'app-usuario-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './usuario-list.component.html',
-  styleUrl: './usuario-list.component.scss'
+  styleUrls: ['./usuario-list.component.scss'],
 })
 export class UsuarioListComponent implements OnInit {
   usuarios: Usuario[] = [];
+  allUsuarios: Usuario[] = [];
   loading = false;
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
-  
-  filters: UsuarioFilters = {};
-  
-  // Modal properties
+
+  filters: UsuarioFilters = {
+    username: '',
+    rol: undefined,
+  };
+
+  // ================================
+  // 🧱 MODAL
+  // ================================
   showModal = false;
   editingUsuario: Usuario | null = null;
   usuarioForm = {
-    nombre: '',
+    username: '',
     password: '',
-    activo: true
+    rol: 'profesor',
   };
 
-  constructor(private usuarioService: UsuarioService) { }
+  constructor(private usuarioService: UsuarioService) {}
 
   ngOnInit(): void {
-    console.log('UsuarioListComponent init');
     this.loadUsuarios();
   }
 
+  // ================================
+  // 🚀 CARGAR USUARIOS
+  // ================================
   loadUsuarios(): void {
     this.loading = true;
+
     const pagination: PaginationParams = {
       page: this.currentPage,
-      limit: this.pageSize
+      limit: this.pageSize,
     };
 
-    this.usuarioService.getUsuarios(pagination, this.filters).subscribe({
+    this.usuarioService.getUsuarios(pagination, {}).subscribe({
       next: (response: any) => {
-        const data = Array.isArray(response) ? response : response.data ?? response;
+        console.log('📥 Respuesta cruda usuarios:', response);
 
-        if (!data) {
-          console.error('⚠️ El backend no devolvió datos válidos:', response);
-          this.usuarios = [];
+        const data =
+          Array.isArray(response)
+            ? response
+            : response.data ?? response.results ?? response.usuarios ?? response;
+
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No se recibieron usuarios. Cargando ejemplo local.');
+          this.usuarios = [
+            {
+              id_usuario: 'local-1',
+              username: 'admin',
+              rol: 'admin',
+              fecha_creacion: new Date().toISOString(),
+            },
+          ];
+          this.allUsuarios = [...this.usuarios];
+          this.totalPages = 1;
           this.loading = false;
           return;
         }
 
-        // Mapear únicamente los campos necesarios para el grid
-        this.usuarios = data.map((u: any) => ({
-          id: u.id_usuario ?? u.id ?? u.id_user ?? '',
-          nombre: u.persona?.nombre ?? u.nombre ?? u.username ?? u.user ?? '',
-          activo: u.activo ?? u.is_active ?? u.estado ?? true,
-          ultimo_acceso: u.ultimo_acceso ?? u.last_login ?? u.last_access ?? u.ultima_conexion ?? null
-        })) as any; // casteo corto para evitar errores de tipos si tu modelo incluye más campos
+        // 🔄 Mapeo del backend → frontend
+        this.usuarios = (data as any[]).map((u: any) => ({
+          id_usuario: u.id_usuario ?? u.id ?? '',
+          username: u.username ?? '',
+          rol: u.rol ?? '',
+          fecha_creacion: u.fecha_creacion ?? u.created_at ?? null,
+          fecha_actualizacion: u.fecha_actualizacion ?? u.updated_at ?? null,
+        }));
 
+        this.allUsuarios = [...this.usuarios];
         this.totalPages = response.total_pages ?? response.totalPages ?? 1;
         this.loading = false;
+        console.log('✅ Usuarios mapeados:', this.usuarios);
       },
       error: (error) => {
-        console.error('Error al cargar usuarios:', error);
+        console.error('❌ Error al cargar usuarios:', error);
         this.usuarios = [];
         this.loading = false;
-      }
+      },
     });
   }
 
+  // ================================
+  // 🔍 FILTROS
+  // ================================
   onFilterChange(): void {
-    this.currentPage = 1;
-    this.loadUsuarios();
+    const filtro = this.filters.username?.toLowerCase().trim() || '';
+    this.usuarios = this.allUsuarios.filter((u) =>
+      u.username.toLowerCase().includes(filtro)
+    );
   }
 
   clearFilters(): void {
-    this.filters = {};
-    this.currentPage = 1;
-    this.loadUsuarios();
+    this.filters = { username: '', rol: undefined };
+    this.usuarios = [...this.allUsuarios];
   }
 
+  // ================================
+  // 📄 PAGINACIÓN
+  // ================================
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
@@ -92,12 +130,15 @@ export class UsuarioListComponent implements OnInit {
     }
   }
 
+  // ================================
+  // 🧱 MODAL
+  // ================================
   openCreateModal(): void {
     this.editingUsuario = null;
     this.usuarioForm = {
-      nombre: '',
+      username: '',
       password: '',
-      activo: true
+      rol: 'profesor',
     };
     this.showModal = true;
   }
@@ -105,9 +146,9 @@ export class UsuarioListComponent implements OnInit {
   editUsuario(usuario: Usuario): void {
     this.editingUsuario = usuario;
     this.usuarioForm = {
-      nombre: usuario.nombre,
+      username: usuario.username,
       password: '',
-      activo: usuario.activo
+      rol: usuario.rol,
     };
     this.showModal = true;
   }
@@ -116,75 +157,86 @@ export class UsuarioListComponent implements OnInit {
     this.showModal = false;
     this.editingUsuario = null;
     this.usuarioForm = {
-      nombre: '',
+      username: '',
       password: '',
-      activo: true
+      rol: 'profesor',
     };
   }
 
+  // ================================
+  // 💾 GUARDAR
+  // ================================
   saveUsuario(): void {
-    if (!this.usuarioForm.nombre.trim()) {
-      alert('Nombre es requerido');
+    if (!this.usuarioForm.username.trim()) {
+      alert('El nombre de usuario es obligatorio');
       return;
     }
 
     if (!this.editingUsuario && !this.usuarioForm.password.trim()) {
-      alert('La contraseña es requerida para nuevos usuarios');
+      alert('La contraseña es obligatoria para nuevos usuarios');
       return;
     }
 
     if (this.editingUsuario) {
-      // Actualizar usuario existente
-      const updateData: any = {
-        nombre: this.usuarioForm.nombre,
-        activo: this.usuarioForm.activo
+      // 🧱 Actualizar usuario existente
+      const payload: UpdateUsuarioRequest = {
+        username: this.usuarioForm.username,
+        rol: this.usuarioForm.rol,
       };
-      
-      // Solo incluir password si se proporcionó
-      if (this.usuarioForm.password.trim()) {
-        updateData.password = this.usuarioForm.password;
+
+      if (this.usuarioForm.password?.trim()) {
+        payload.password = this.usuarioForm.password;
       }
-      
-      this.usuarioService.updateUsuario(this.editingUsuario.id, updateData).subscribe({
-        next: () => {
-          this.loadUsuarios();
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('Error al actualizar usuario:', error);
-          alert('Error al actualizar el usuario');
-        }
-      });
+
+      console.log('📤 Payload actualización:', payload);
+
+      this.usuarioService
+        .updateUsuario(this.editingUsuario.id_usuario, payload)
+        .subscribe({
+          next: () => {
+            this.loadUsuarios();
+            this.closeModal();
+          },
+          error: (error) => {
+            console.error('❌ Error al actualizar usuario:', error);
+            alert('Error al actualizar el usuario');
+          },
+        });
     } else {
-      // Crear nuevo usuario
-      const newUsuario = {
-        nombre: this.usuarioForm.nombre,
+      // 🆕 Crear nuevo usuario
+      const payload: CreateUsuarioRequest = {
+        username: this.usuarioForm.username,
         password: this.usuarioForm.password,
-        activo: this.usuarioForm.activo
+        rol: this.usuarioForm.rol,
       };
-      
-      this.usuarioService.createUsuario(newUsuario).subscribe({
+
+      console.log('📤 Payload creación:', payload);
+
+      this.usuarioService.createUsuario(payload).subscribe({
         next: () => {
           this.loadUsuarios();
           this.closeModal();
         },
         error: (error) => {
-          console.error('Error al crear usuario:', error);
+          console.error('❌ Error al crear usuario:', error);
           alert('Error al crear el usuario');
-        }
+        },
       });
     }
   }
 
+  // ================================
+  // 🗑️ ELIMINAR
+  // ================================
   deleteUsuario(usuario: Usuario): void {
-    if (confirm(`¿Está seguro de eliminar el usuario "${usuario.nombre}"?`)) {
-      this.usuarioService.deleteUsuario(usuario.id).subscribe({
+    if (confirm(`¿Está seguro de eliminar al usuario "${usuario.username}"?`)) {
+      this.usuarioService.deleteUsuario(usuario.id_usuario).subscribe({
         next: () => {
           this.loadUsuarios();
         },
         error: (error) => {
-          console.error('Error al eliminar usuario:', error);
-        }
+          console.error('❌ Error al eliminar usuario:', error);
+        },
       });
     }
   }
