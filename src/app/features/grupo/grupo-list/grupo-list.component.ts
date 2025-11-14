@@ -1,135 +1,131 @@
+// src/app/features/grupo/grupo-list/grupo-list.component.ts
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 import { GrupoService } from '../../../core/services/grupo.service';
-import { Grupo, CreateGrupoRequest, GrupoFilters } from '../../../shared/models/grupo.model';
-import { Materia } from '../../../shared/models/materia.model';
-import { Profesor } from '../../../shared/models/profesor.model';
-import { Periodo } from '../../../shared/models/periodo.model';
-import { PaginationParams } from '../../../core/models/api-response.model';
 import { MateriaService } from '../../../core/services/materia.service';
 import { ProfesorService } from '../../../core/services/profesor.service';
-import { PeriodoService } from '../../../core/services/periodo.service';
+
+import {
+  Grupo,
+  CreateGrupoRequest,
+  GrupoFilters,
+} from '../../../shared/models/grupo.model';
+import { Materia } from '../../../shared/models/materia.model';
+import { Profesor } from '../../../shared/models/profesor.model';
+import { PaginationParams } from '../../../core/models/api-response.model';
 
 @Component({
   selector: 'app-grupo-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './grupo-list.component.html',
-  styleUrls: ['./grupo-list.component.scss']
+  styleUrls: ['./grupo-list.component.scss'],
 })
 export class GrupoListComponent implements OnInit {
-  // === Datos ===
+  // Datos
   grupos: Grupo[] = [];
   materias: Materia[] = [];
   profesores: Profesor[] = [];
 
-  // === Estado ===
+  // Estado UI
   loading = false;
   showModal = false;
   editingGrupo: Grupo | null = null;
 
-  // === Paginación ===
+  // Paginación
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
 
-  // === Filtros ===
-  filters: GrupoFilters = {};
+  // Filtros
+  filters: GrupoFilters = {
+    nombre: '',
+    activo: undefined,
+  };
 
-  // === Formulario ===
+  // Formulario
   grupoForm: CreateGrupoRequest = {
     nombre: '',
-    materia_id: 0,
-    periodo_id: 0,
-    profesor_id: 0,
-    activo: true
+    materia_id: '',
+    profesor_id: '',
+    activo: true,
   };
 
   constructor(
     private grupoService: GrupoService,
     private materiaService: MateriaService,
-    private profesorService: ProfesorService,
-    private periodoService: PeriodoService
+    private profesorService: ProfesorService
   ) {}
 
   ngOnInit(): void {
-  this.loadGrupos();
-  this.loadMaterias();
-  this.loadProfesores();
-}
+    this.loadMaterias();
+    this.loadProfesores();
+    this.loadGrupos();
+  }
 
+  // ================================
+  // Cargar grupos
+  // ================================
+  loadGrupos(): void {
+    this.loading = true;
 
-  // === Carga de datos ===
-loadGrupos(): void {
-  this.loading = true;
+    const pagination: PaginationParams = {
+      page: this.currentPage,
+      limit: this.pageSize,
+    };
 
-  const pagination: PaginationParams = {
-    page: this.currentPage,
-    limit: this.pageSize,
-  };
-
-  // Esperar a que materias y profesores estén cargados antes de procesar los grupos
-  const waitForData = () =>
-    new Promise<void>((resolve) => {
-      const check = () => {
-        if (this.materias.length > 0 && this.profesores.length > 0) {
-          resolve();
-        } else {
-          setTimeout(check, 100); // Revisa cada 100ms
-        }
-      };
-      check();
-    });
-
-  waitForData().then(() => {
     this.grupoService.getGrupos(pagination, this.filters).subscribe({
-      next: (response: any) => {
-        console.log('📦 Respuesta cruda grupos:', response);
+      next: (response) => {
+        console.log('📦 Grupos desde backend:', response);
 
         const data = Array.isArray(response)
           ? response
-          : response.data ?? response;
+          : (response as any)?.data ?? response;
 
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-          console.warn('⚠️ No se recibieron grupos desde el backend.');
-          this.totalPages = 1;
-          this.loading = false;
-          return;
-        }
+        this.grupos = (data ?? []).map((g: any) => {
+          const id = (g.id || g.id_grupo || '') as string;
+          const materiaId = (g.materia_id || g.materia?.id || '') as string;
+          const profesorId = (g.profesor_id || g.profesor?.id || '') as string;
 
-        this.grupos = (data as any[]).map((g: any) => {
           const materiaEncontrada = this.materias.find(
-            (m) => m.id === (g.materia_id ?? g.materia?.id)
+            (m) => m.id === materiaId
           );
           const profesorEncontrado = this.profesores.find(
-            (p) => p.id === (g.profesor_id ?? g.profesor?.id)
+            (p) => p.id === profesorId
           );
 
-          return {
-            id: g.id ?? g.id_grupo ?? 0,
-            nombre: g.nombre ?? g.nombre_grupo ?? '',
-            materia_id: g.materia_id ?? g.materia?.id ?? 0,
-            profesor_id: g.profesor_id ?? g.profesor?.id ?? 0,
-            activo: g.activo ?? g.is_active ?? true,
-
+          const grupo: Grupo = {
+            id,
+            id_grupo: id,
+            nombre: g.nombre || g.nombre_grupo || '',
+            materia_id: materiaId,
+            profesor_id: profesorId,
+            activo:
+              typeof g.activo === 'boolean'
+                ? g.activo
+                : g.is_active !== undefined
+                ? g.is_active
+                : true,
             materia: materiaEncontrada
               ? { id: materiaEncontrada.id, nombre: materiaEncontrada.nombre }
               : g.materia
               ? { id: g.materia.id, nombre: g.materia.nombre }
-              : { id: 0, nombre: 'Sin asignar' },
-
+              : { id: '', nombre: 'Sin asignar' },
             profesor: profesorEncontrado
               ? { id: profesorEncontrado.id, nombre: profesorEncontrado.nombre }
               : g.profesor
               ? { id: g.profesor.id, nombre: g.profesor.nombre }
-              : { id: 0, nombre: 'Sin asignar' },
-          } as Grupo;
+              : { id: '', nombre: 'Sin asignar' },
+          };
+
+          return grupo;
         });
 
-        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
+        this.totalPages = 1;
         this.loading = false;
-        console.log('✅ Grupos cargados:', this.grupos);
       },
       error: (error) => {
         console.error('❌ Error al cargar grupos:', error);
@@ -137,137 +133,116 @@ loadGrupos(): void {
         this.loading = false;
       },
     });
-  });
-}
+  }
 
-
-
-
+  // ================================
+  // Cargar materias
+  // ================================
   loadMaterias(): void {
-    this.loading = true;
-    const pagination: PaginationParams = {
-      page: this.currentPage,
-      limit: this.pageSize,
-    };
+    const pagination: PaginationParams = { page: 1, limit: 100 };
 
     this.materiaService.getMaterias(pagination, {}).subscribe({
       next: (response: any) => {
-        console.log('Respuesta cruda materias:', response);
+        const data = Array.isArray(response)
+          ? response
+          : response?.data ?? response;
 
-        // Aceptar array directo o objeto { data, ... }
-        const data = Array.isArray(response) ? response : response.data ?? response;
-
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-          console.warn('No se recibieron materias desde el backend. Usando fallback temporal.');
-          // Fallback temporal para ver la UI mientras debuggeas
-          this.materias = [
-            {
-              id: 'local-1',
-              nombre: 'Matemáticas Básicas',
-              codigo: 'MAT-101',
-              creditos: 4,
-              profesor_id: null,
-              profesor_nombre: '',
-              activo: true,
-              fecha_creacion: new Date().toISOString(),
-              fecha_actualizacion: new Date().toISOString()
-            }
-          ] as any;
-          this.totalPages = 1;
-          this.loading = false;
-          return;
-        }
-
-        // Mapear campos a nuestro modelo frontal (resiliente a diferentes nombres desde backend)
-        this.materias = (data as any[]).map((m: any) => ({
-          id: m.id_materia ?? m.id ?? m.idMateria ?? '',
-          nombre: m.nombre ?? m.titulo ?? m.nombre_materia ?? '',
-          codigo: m.codigo ?? m.sigla ?? m.codigo_materia ?? '',
-          creditos: m.creditos ?? m.creditos_horas ?? m.creditos_totales ?? 0,
-          profesor_id: m.profesor_id ?? m.profesor?.id ?? m.docente_id ?? null,
-          profesor_nombre: m.profesor?.persona?.nombre ?? m.profesor?.nombre ?? m.docente?.nombre ?? '',
-          activo: m.activo ?? m.is_active ?? true,
-          fecha_creacion: m.fecha_creacion ?? m.created_at,
-          fecha_actualizacion: m.fecha_edicion ?? m.updated_at
+        this.materias = (data ?? []).map((m: any) => ({
+          id: m.id_materia ?? m.id ?? '',
+          nombre: m.nombre ?? 'Sin nombre',
         })) as Materia[];
 
-        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
-        this.loading = false;
-        console.log('✅ Materias mapeadas:', this.materias);
+        console.log('📘 Materias:', this.materias);
       },
       error: (error) => {
-        console.error('Error al cargar materias:', error);
+        console.error('❌ Error al cargar materias:', error);
         this.materias = [];
-        this.loading = false;
       },
     });
   }
 
-loadProfesores(): void {
-  this.loading = true;
-  const pagination: PaginationParams = {
-    page: this.currentPage,
-    limit: this.pageSize,
-  };
+  // ================================
+  // Cargar profesores
+  // ================================
+  loadProfesores(): void {
+    const pagination: PaginationParams = { page: 1, limit: 100 };
 
-  const profesorFilters = { activo: true }; // 👈 tipo correcto
+    this.profesorService
+      .getProfesores(pagination, { activo: true })
+      .subscribe({
+        next: (response: any) => {
+          const data = Array.isArray(response)
+            ? response
+            : response?.data ?? response;
 
-  this.profesorService.getProfesores(pagination, profesorFilters).subscribe({
-    next: (response: any) => {
-      const data = Array.isArray(response) ? response : response.data;
+          this.profesores = (data ?? []).map((p: any) => ({
+            id: p.id_profesor ?? p.id ?? '',
+            nombre: p.persona?.nombre || p.nombre || '',
+          })) as Profesor[];
 
-      if (!data) {
-        console.error('⚠️ El backend no devolvió datos válidos:', response);
-        this.loading = false;
-        return;
-      }
+          console.log('👨‍🏫 Profesores:', this.profesores);
+        },
+        error: (error) => {
+          console.error('❌ Error al cargar profesores:', error);
+          this.profesores = [];
+        },
+      });
+  }
 
-      this.profesores = data.map((p: any) => ({
-        id: p.id_profesor,
-        nombre: p.persona?.nombre || '',
-        especialidad: p.especialidad,
-        email: p.persona?.email || '',
-        telefono: p.persona?.telefono || '',
-        departamento: p.departamento,
-        activo: p.activo ?? true,
-        fecha_creacion: p.persona?.fecha_creacion,
-        fecha_actualizacion: p.persona?.fecha_edicion
-      }));
-
-      this.loading = false;
-      console.log('✅ Profesores cargados desde backend:', this.profesores);
-    },
-    error: (error) => {
-      console.error('❌ Error al cargar profesores:', error);
-      this.loading = false;
-    }
-  });
-}
-
-
-
-  // === Filtros ===
+  // ================================
+  // Filtros
+  // ================================
   onFilterChange(): void {
     this.currentPage = 1;
     this.loadGrupos();
   }
 
   clearFilters(): void {
-    this.filters = {};
+    this.filters = { nombre: '', activo: undefined };
     this.loadGrupos();
   }
 
-  // === Modal ===
+  // ================================
+  // Modal: crear
+  // ================================
   openCreateModal(): void {
     this.editingGrupo = null;
     this.grupoForm = {
       nombre: '',
-      materia_id: 0,
-      periodo_id: 0,
-      profesor_id: 0,
-      activo: true
+      materia_id: '',
+      profesor_id: '',
+      activo: true,
     };
     this.showModal = true;
+    console.log('🟢 Modal crear abierto');
+  }
+
+  // ================================
+  // Modal: editar
+  // ================================
+  editGrupo(grupo: any): void {
+    console.log('📝 Editar grupo clickeado:', grupo);
+
+    this.editingGrupo = {
+      id: grupo.id ?? grupo.id_grupo ?? '',
+      id_grupo: grupo.id_grupo ?? grupo.id ?? '',
+      nombre: grupo.nombre || '',
+      materia_id: grupo.materia_id || '',
+      profesor_id: grupo.profesor_id || '',
+      activo: grupo.activo ?? true,
+      materia: grupo.materia,
+      profesor: grupo.profesor,
+    };
+
+    this.grupoForm = {
+      nombre: this.editingGrupo.nombre,
+      materia_id: this.editingGrupo.materia_id,
+      profesor_id: this.editingGrupo.profesor_id,
+      activo: this.editingGrupo.activo,
+    };
+
+    this.showModal = true;
+    console.log('🟡 Modal editar abierto, showModal =', this.showModal);
   }
 
   closeModal(): void {
@@ -275,66 +250,88 @@ loadProfesores(): void {
     this.editingGrupo = null;
   }
 
-  // === CRUD ===
-  editGrupo(grupo: Grupo): void {
-    this.editingGrupo = grupo;
-    this.grupoForm = {
-      nombre: grupo.nombre,
-      materia_id: grupo.materia_id,
-      periodo_id: grupo.periodo_id,
-      profesor_id: grupo.profesor_id,
-      activo: grupo.activo
-    };
-    this.showModal = true;
-  }
-
+  // ================================
+  // Guardar (crear / actualizar)
+  // ================================
   saveGrupo(): void {
-    if (!this.grupoForm.nombre.trim() ||
-        !this.grupoForm.materia_id ||
-        !this.grupoForm.periodo_id ||
-        !this.grupoForm.profesor_id) {
+    if (
+      !this.grupoForm.nombre.trim() ||
+      !this.grupoForm.materia_id ||
+      !this.grupoForm.profesor_id
+    ) {
       alert('⚠️ Todos los campos son obligatorios');
       return;
     }
 
+    const payload: CreateGrupoRequest = { ...this.grupoForm };
+    console.log('📨 Payload a enviar:', payload);
+
+    // EDITAR
     if (this.editingGrupo) {
-      this.grupoService.updateGrupo(this.editingGrupo.id, this.grupoForm).subscribe({
-        next: () => {
+      const id = this.editingGrupo.id_grupo ?? this.editingGrupo.id;
+
+      if (!id) {
+        alert('Error interno: falta el ID del grupo');
+        return;
+      }
+
+      this.grupoService.updateGrupo(id, payload).subscribe({
+        next: (res) => {
+          console.log('✅ Grupo actualizado:', res);
           this.loadGrupos();
           this.closeModal();
         },
         error: (error) => {
           console.error('❌ Error al actualizar grupo:', error);
-          alert('Error al actualizar grupo');
-        }
-      });
-    } else {
-      this.grupoService.createGrupo(this.grupoForm).subscribe({
-        next: () => {
-          this.loadGrupos();
-          this.closeModal();
+          alert(
+            'Error al actualizar grupo: ' +
+              (error.error?.detail ?? 'ver consola')
+          );
         },
-        error: (error) => {
-          console.error('❌ Error al crear grupo:', error);
-          alert('Error al crear grupo');
-        }
       });
+      return;
     }
+
+    // CREAR
+    this.grupoService.createGrupo(payload).subscribe({
+      next: (res) => {
+        console.log('✅ Grupo creado:', res);
+        this.loadGrupos();
+        this.closeModal();
+      },
+      error: (error) => {
+        console.error('❌ Error al crear grupo:', error);
+        alert(
+          'Error al crear grupo: ' +
+            (error.error?.detail ?? 'ver consola')
+        );
+      },
+    });
   }
 
+  // ================================
+  // Eliminar
+  // ================================
   deleteGrupo(grupo: Grupo): void {
-    if (confirm(`¿Está seguro de eliminar el grupo "${grupo.nombre}"?`)) {
-      this.grupoService.deleteGrupo(grupo.id).subscribe({
+    const id = grupo.id_grupo ?? grupo.id;
+
+    if (!id) {
+      alert('Error interno: falta el ID del grupo');
+      return;
+    }
+
+    if (confirm(`¿Eliminar el grupo "${grupo.nombre}"?`)) {
+      this.grupoService.deleteGrupo(id).subscribe({
         next: () => this.loadGrupos(),
         error: (error) => {
           console.error('❌ Error al eliminar grupo:', error);
           alert('No se pudo eliminar el grupo');
-        }
+        },
       });
     }
   }
 
-  // === Paginación ===
+  // Paginación
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
