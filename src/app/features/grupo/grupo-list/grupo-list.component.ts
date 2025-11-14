@@ -120,7 +120,7 @@ export class GrupoListComponent implements OnInit {
 
           return grupo;
         });
-
+        this.allGrupos = [...this.grupos];
         this.totalPages = 1;
         this.loading = false;
       },
