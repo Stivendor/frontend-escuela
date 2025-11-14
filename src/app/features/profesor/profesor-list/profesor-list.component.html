@@ -1,0 +1,197 @@
+<div class="profesor-list">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Gestión de Profesores</h2>
+      <button class="btn btn-success" (click)="openCreateModal()">
+        Nuevo Profesor
+      </button>
+    </div>
+
+    <div class="card-body">
+      <!-- Filtros -->
+      <div class="filters mb-3">
+        <div class="row">
+          <div class="col-md-3">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Buscar por nombre..."
+              [(ngModel)]="filters.nombre"
+              (input)="onFilterChange()"
+            >
+          </div>
+          <div class="col-md-2">
+            <select
+              class="form-control"
+              [(ngModel)]="filters.activo"
+              (change)="onFilterChange()"
+            >
+              <option [ngValue]="undefined">Todos los estados</option>
+              <option [ngValue]="true">Activos</option>
+              <option [ngValue]="false">Inactivos</option>
+            </select>
+
+          </div>
+          
+          <div class="col-md-2">
+            <button class="btn btn-secondary" (click)="clearFilters()">
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Profesores -->
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Especialidad</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="6" class="text-center">Cargando...</td>
+            </tr>
+            <tr *ngIf="!loading && profesores.length === 0">
+              <td colspan="6" class="text-center">No hay profesores disponibles</td>
+            </tr>
+            <tr *ngFor="let profesor of profesores">
+              <td>{{ profesor.nombre }}</td>
+              <td>{{ profesor.especialidad }}</td>
+              <td>{{ profesor.email }}</td>
+              <td>{{ profesor.telefono }}</td>
+              <td>
+                <span class="badge"
+                      [class.badge-success]="profesor.activo"
+                      [class.badge-danger]="!profesor.activo">
+                  {{ profesor.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-primary" (click)="editProfesor(profesor)">
+                  Editar
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteProfesor(profesor)">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="pagination mt-3" *ngIf="totalPages > 1">
+        <button
+          class="btn btn-secondary"
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)"
+        >
+          Anterior
+        </button>
+        <span class="mx-3">
+          Página {{ currentPage }} de {{ totalPages }}
+        </span>
+        <button
+          class="btn btn-secondary"
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para crear/editar profesor -->
+  <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingProfesor ? 'Editar Profesor' : 'Nuevo Profesor' }}</h5>
+          <button type="button" class="close" (click)="closeModal()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveProfesor()">
+            <div class="form-group">
+              <label for="nombre">Nombre *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="nombre"
+                [(ngModel)]="profesorForm.nombre"
+                name="nombre"
+                required
+                placeholder="Ingrese el nombre del profesor"
+              >
+            </div>
+            <div class="form-group">
+              <label for="especialidad">Especialidad *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="especialidad"
+                [(ngModel)]="profesorForm.especialidad"
+                name="especialidad"
+                required
+                placeholder="Ingrese la especialidad del profesor"
+              >
+            </div>
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                [(ngModel)]="profesorForm.email"
+                name="email"
+                required
+                placeholder="Ingrese el correo del profesor"
+              >
+            </div>
+            <div class="form-group">
+              <label for="telefono">Teléfono *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="telefono"
+                [(ngModel)]="profesorForm.telefono"
+                name="telefono"
+                required
+                placeholder="Ingrese el teléfono del profesor"
+              >
+            </div>
+            <div class="form-group">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="activo"
+                  [(ngModel)]="profesorForm.activo"
+                  name="activo"
+                >
+                <label class="form-check-label" for="activo">
+                  Profesor activo
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="saveProfesor()">
+            {{ editingProfesor ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

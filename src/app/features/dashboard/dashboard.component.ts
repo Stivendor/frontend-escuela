@@ -12,9 +12,9 @@ import { RouterModule } from '@angular/router';
       <div class="welcome-section">
         <div class="card glass">
           <div class="card-body text-center">
-            <div class="welcome-icon"></div>
-            <h1 class="welcome-title text-title-contrast">¡Bienvenido al Sistema!</h1>
-            <p class="welcome-subtitle text-high-contrast">Sistema de gestión con arquitectura limpia y diseño moderno</p>
+            <div class="welcome-icon">🎓</div>
+            <h1 class="welcome-title text-title-contrast">Sistema de Gestión Escolar</h1>
+            <p class="welcome-subtitle text-high-contrast">Administración eficiente de estudiantes, profesores y calificaciones</p>
           </div>
         </div>
       </div>
@@ -24,17 +24,17 @@ import { RouterModule } from '@angular/router';
         <div class="module-card slide-in-up" style="animation-delay: 0.1s">
           <div class="card">
             <div class="card-body text-center">
-              <div class="module-icon">📁</div>
-              <h3 class="module-title">Categorías</h3>
-              <p class="module-description">Gestiona las categorías de productos de manera eficiente</p>
+              <div class="module-icon">👨‍🎓</div>
+              <h3 class="module-title">Estudiantes</h3>
+              <p class="module-description">Gestión completa del alumnado</p>
               <div class="module-features">
-                <span class="feature-tag">CRUD</span>
-                <span class="feature-tag">Validación</span>
-                <span class="feature-tag">API</span>
+                <span class="feature-tag">Inscripciones</span>
+                <span class="feature-tag">Expedientes</span>
+                <span class="feature-tag">Asistencia</span>
               </div>
-              <a routerLink="/categorias" class="btn btn-primary btn-lg">
-                <span class="btn-icon">🚀</span>
-                Ver Categorías
+              <a routerLink="/estudiantes" class="btn btn-primary btn-lg">
+                <span class="btn-icon">📚</span>
+                Gestionar Estudiantes
               </a>
             </div>
           </div>
@@ -43,17 +43,17 @@ import { RouterModule } from '@angular/router';
         <div class="module-card slide-in-up" style="animation-delay: 0.2s">
           <div class="card">
             <div class="card-body text-center">
-              <div class="module-icon">👥</div>
-              <h3 class="module-title">Usuarios</h3>
-              <p class="module-description">Administra los usuarios del sistema con seguridad</p>
+              <div class="module-icon">👨‍🏫</div>
+              <h3 class="module-title">Profesores</h3>
+              <p class="module-description">Control del personal docente</p>
               <div class="module-features">
-                <span class="feature-tag">Autenticación</span>
-                <span class="feature-tag">Roles</span>
-                <span class="feature-tag">Seguridad</span>
+                <span class="feature-tag">Asignaciones</span>
+                <span class="feature-tag">Horarios</span>
+                <span class="feature-tag">Materias</span>
               </div>
-              <a routerLink="/usuarios" class="btn btn-primary btn-lg">
-                <span class="btn-icon">👤</span>
-                Ver Usuarios
+              <a routerLink="/profesores" class="btn btn-primary btn-lg">
+                <span class="btn-icon">📋</span>
+                Ver Profesores
               </a>
             </div>
           </div>
@@ -62,18 +62,18 @@ import { RouterModule } from '@angular/router';
         <div class="module-card slide-in-up" style="animation-delay: 0.3s">
           <div class="card">
             <div class="card-body text-center">
-              <div class="module-icon">📊</div>
-              <h3 class="module-title">Analytics</h3>
-              <p class="module-description">Visualiza estadísticas y métricas del sistema</p>
+              <div class="module-icon">📝</div>
+              <h3 class="module-title">Notas</h3>
+              <p class="module-description">Gestión de calificaciones y evaluaciones</p>
               <div class="module-features">
-                <span class="feature-tag">Gráficos</span>
-                <span class="feature-tag">Reportes</span>
-                <span class="feature-tag">Dashboard</span>
+                <span class="feature-tag">Calificaciones</span>
+                <span class="feature-tag">Boletines</span>
+                <span class="feature-tag">Promedios</span>
               </div>
-              <button class="btn btn-outline btn-lg" disabled>
-                <span class="btn-icon">📈</span>
-                Próximamente
-              </button>
+              <a routerLink="/notas" class="btn btn-primary btn-lg">
+                <span class="btn-icon">📊</span>
+                Gestionar Notas
+              </a>
             </div>
           </div>
         </div>
@@ -87,22 +87,30 @@ import { RouterModule } from '@angular/router';
           </div>
           <div class="card-body">
             <div class="actions-grid">
-              <button class="action-btn">
-                <span class="action-icon">➕</span>
-                <span class="action-text">Nueva Categoría</span>
-              </button>
-              <button class="action-btn">
-                <span class="action-icon">👤</span>
-                <span class="action-text">Nuevo Usuario</span>
-              </button>
-              <button class="action-btn">
-                <span class="action-icon">📊</span>
-                <span class="action-text">Ver Reportes</span>
-              </button>
-              <button class="action-btn">
-                <span class="action-icon">⚙️</span>
-                <span class="action-text">Configuración</span>
-              </button>
+              <a routerLink="/estudiantes/nuevo" class="action-btn">
+                <span class="action-icon">👨‍🎓</span>
+                <span class="action-text">Nuevo Estudiante</span>
+              </a>
+              <a routerLink="/profesores/nuevo" class="action-btn">
+                <span class="action-icon">👨‍🏫</span>
+                <span class="action-text">Nuevo Profesor</span>
+              </a>
+              <a routerLink="/grupos/nuevo" class="action-btn">
+                <span class="action-icon">👥</span>
+                <span class="action-text">Nuevo Grupo</span>
+              </a>
+              <a routerLink="/materias" class="action-btn">
+                <span class="action-icon">📚</span>
+                <span class="action-text">Materias</span>
+              </a>
+              <a routerLink="/periodos" class="action-btn">
+                <span class="action-icon">📅</span>
+                <span class="action-text">Periodos</span>
+              </a>
+              <a routerLink="/notas/registro" class="action-btn">
+                <span class="action-icon">✏️</span>
+                <span class="action-text">Registrar Notas</span>
+              </a>
             </div>
           </div>
         </div>
@@ -287,12 +295,71 @@ import { RouterModule } from '@angular/router';
         grid-template-columns: 1fr;
       }
     }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .module-card .card {
+      height: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .module-card .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .feature-tag {
+      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(26, 35, 126, 0.2);
+    }
+
+    .action-btn {
+      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+      color: white;
+      border: none;
+      padding: 1.5rem;
+      border-radius: var(--radius-lg);
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(26, 35, 126, 0.25);
+    }
+
+    .action-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .welcome-section .card {
+      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+      color: white;
+    }
+
+    .welcome-title {
+      color: white;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    // Aquí se pueden cargar estadísticas del dashboard
   }
 }
