@@ -1,0 +1,277 @@
+<div class="grupo-list">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2 class="card-title">Gestión de Grupos</h2>
+      <button
+        class="btn btn-success"
+        type="button"
+        (click)="openCreateModal()"
+      >
+        Nuevo Grupo
+      </button>
+    </div>
+
+    <div class="card-body">
+      <!-- 🔎 Filtros -->
+      <div class="filters mb-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Buscar por nombre de grupo..."
+              [(ngModel)]="filters.nombre" (input)="onFilterChange()" />
+          </div>
+
+          <div class="col-md-3">
+            <select
+              class="form-control"
+              [(ngModel)]="filters.activo"
+              (change)="onFilterChange()"
+            >
+              <option [ngValue]="undefined">Todos los estados</option>
+              <option [ngValue]="true">Activos</option>
+              <option [ngValue]="false">Inactivos</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <button
+              class="btn btn-secondary w-100"
+              type="button"
+              (click)="clearFilters()"
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📋 Tabla de grupos -->
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>GRUPO</th>
+              <th>MATERIA</th>
+              <th>PROFESOR</th>
+              <th>ESTADO</th>
+              <th class="text-center">ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="5" class="text-center">Cargando...</td>
+            </tr>
+
+            <tr *ngIf="!loading && grupos.length === 0">
+              <td colspan="5" class="text-center">No hay grupos registrados</td>
+            </tr>
+
+            <tr *ngFor="let grupo of grupos">
+              <td>{{ grupo.nombre }}</td>
+              <td>{{ grupo.materia?.nombre || 'Sin asignar' }}</td>
+              <td>{{ grupo.profesor?.nombre || 'Sin asignar' }}</td>
+              <td>
+                <span class="badge px-3 py-2" [ngClass]="grupo.activo ? 'bg-success' : 'bg-danger'">
+                  {{ grupo.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button
+                  class="btn btn-sm btn-primary me-2"
+                  type="button"
+                  (click)="editGrupo(grupo)"
+                >
+                  Editar
+                </button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  type="button"
+                  (click)="deleteGrupo(grupo)"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 📄 Paginación -->
+      <div class="pagination mt-3 text-center" *ngIf="totalPages > 1">
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)"
+        >
+          Anterior
+        </button>
+        <span class="mx-3">
+          Página {{ currentPage }} de {{ totalPages }}
+        </span>
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🟩 Modal Crear / Editar Grupo -->
+<div
+  class="modal fade show"
+  tabindex="-1"
+  *ngIf="showModal"
+  [ngStyle]="{ display: 'block', background: 'rgba(0,0,0,0.5)' }"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ editingGrupo ? 'Editar Grupo' : 'Nuevo Grupo' }}
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeModal()"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Nombre del Grupo</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="grupoForm.nombre"
+              name="nombre"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Materia</label>
+            <select
+              class="form-control"
+              [(ngModel)]="grupoForm.materia_id"
+              name="materia_id"
+              required
+            >
+              <option value="">Seleccione una materia</option>
+              <option *ngFor="let materia of materias" [value]="materia.id">
+                {{ materia.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Profesor</label>
+            <select
+              class="form-control"
+              [(ngModel)]="grupoForm.profesor_id"
+              name="profesor_id"
+              required
+            >
+              <option value="">Seleccione un profesor</option>
+              <option *ngFor="let profesor of profesores" [value]="profesor.id">
+                {{ profesor.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Estado</label>
+            <select
+              class="form-control"
+              [(ngModel)]="grupoForm.activo"
+              name="activo"
+            >
+              <option [ngValue]="true">Activo</option>
+              <option [ngValue]="false">Inactivo</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeModal()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="saveGrupo()"
+        >
+          {{ editingGrupo ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 🟩 Modal Crear / Editar Grupo -->
+<div class="modal fade show" tabindex="-1"
+  [ngStyle]="{ display: showModal ? 'block' : 'none', background: 'rgba(0,0,0,0.5)' }" *ngIf="showModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ editingGrupo ? 'Editar Grupo' : 'Nuevo Grupo' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Nombre del Grupo</label>
+            <input type="text" class="form-control" [(ngModel)]="grupoForm.nombre" name="nombre" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Materia</label>
+            <select class="form-control" [(ngModel)]="grupoForm.materia_id" name="materia_id" required>
+              <option value="">Seleccione una materia</option>
+              <option *ngFor="let materia of materias" [value]="materia.id">
+                {{ materia.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Profesor</label>
+            <select class="form-control" [(ngModel)]="grupoForm.profesor_id" name="profesor_id" required>
+              <option value="">Seleccione un profesor</option>
+              <option *ngFor="let profesor of profesores" [value]="profesor.id">
+                {{ profesor.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Estado</label>
+            <select class="form-control" [(ngModel)]="grupoForm.activo" name="activo">
+              <option [ngValue]="true">Activo</option>
+              <option [ngValue]="false">Inactivo</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="saveGrupo()">
+          {{ editingGrupo ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

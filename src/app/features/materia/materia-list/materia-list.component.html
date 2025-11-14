@@ -1,0 +1,179 @@
+<div class="materia-list">
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2 class="card-title mb-0">Gestión de Materias</h2>
+      <button class="btn btn-success" (click)="openCreateModal()">Nueva Materia</button>
+    </div>
+
+    <div class="card-body">
+      <!-- Filtros -->
+      <div class="filters mb-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-4">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Buscar por nombre..."
+              [(ngModel)]="nombreFiltro"
+              (input)="onFilterChange()"
+            >
+          </div>
+          <div class="col-md-3">
+            <select
+              class="form-select"
+              [(ngModel)]="filters.activo"
+              (change)="onFilterChange()"
+            >
+              <option value="">Todos los estados</option>
+              <option value="true">Activas</option>
+              <option value="false">Inactivas</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-secondary w-100" (click)="limpiarFiltro()">Limpiar</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Tabla -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Nombre</th>
+              <th>Código</th>
+              <th>Créditos</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="5" class="text-center">Cargando...</td>
+            </tr>
+            <tr *ngIf="!loading && materias.length === 0">
+              <td colspan="5" class="text-center">No hay materias registradas</td>
+            </tr>
+            <tr *ngFor="let materia of materias">
+              <td>{{ materia.nombre }}</td>
+              <td>{{ materia.codigo }}</td>
+              <td>{{ materia.creditos }}</td>
+              <td>
+                <span 
+                  class="badge"
+                  [ngClass]="materia.activo ? 'badge-activo' : 'badge-inactivo'"
+                >
+                  {{ materia.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-primary me-2" (click)="editMateria(materia)">
+                  Editar
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteMateria(materia)">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="pagination mt-3 text-center" *ngIf="totalPages > 1">
+        <button 
+          class="btn btn-secondary me-2" 
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)"
+        >
+          Anterior
+        </button>
+        <span>Página {{ currentPage }} de {{ totalPages }}</span>
+        <button 
+          class="btn btn-secondary ms-2"
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div 
+    class="modal fade"
+    [class.show]="showModal"
+    [style.display]="showModal ? 'block' : 'none'"
+    tabindex="-1"
+    role="dialog"
+  >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title mb-0">{{ editingMateria ? 'Editar Materia' : 'Nueva Materia' }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+
+        <div class="modal-body">
+          <form (ngSubmit)="saveMateria()">
+            <div class="form-group mb-3">
+              <label for="nombre">Nombre *</label>
+              <input 
+                type="text"
+                class="form-control"
+                id="nombre"
+                [(ngModel)]="materiaForm.nombre"
+                name="nombre"
+                required
+              >
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="codigo">Código *</label>
+              <input 
+                type="text"
+                class="form-control"
+                id="codigo"
+                [(ngModel)]="materiaForm.codigo"
+                name="codigo"
+                required
+              >
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="creditos">Créditos *</label>
+              <input 
+                type="number"
+                class="form-control"
+                id="creditos"
+                [(ngModel)]="materiaForm.creditos"
+                name="creditos"
+                required
+              >
+            </div>
+
+            <div class="form-check">
+              <input 
+                type="checkbox"
+                class="form-check-input"
+                id="activo"
+                [(ngModel)]="materiaForm.activo"
+                name="activo"
+              >
+              <label class="form-check-label" for="activo">Materia activa</label>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="saveMateria()">
+            {{ editingMateria ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

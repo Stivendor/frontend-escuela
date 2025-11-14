@@ -1,54 +1,26 @@
-/**
- * Modelo para la entidad Usuario
- */
 export interface Usuario {
-  id: number;
-  email: string;
-  nombre: string;
-  apellido: string;
-  activo: boolean;
+  id_usuario: string;
+  username: string;
+  rol: string;
   fecha_creacion: string;
-  fecha_actualizacion: string;
+  activo?: boolean;
   ultimo_acceso?: string;
 }
 
-/**
- * Modelo para crear un nuevo usuario
- */
 export interface CreateUsuarioRequest {
-  email: string;
+  username: string;
   password: string;
-  nombre: string;
-  apellido: string;
-  activo?: boolean;
+  rol: string;
 }
 
-/**
- * Modelo para actualizar un usuario
- */
 export interface UpdateUsuarioRequest {
-  email?: string;
-  nombre?: string;
-  apellido?: string;
+  username?: string;
+  password?: string;
+  rol?: string;
   activo?: boolean;
 }
 
-/**
- * Modelo para cambiar contraseña
- */
-export interface ChangePasswordRequest {
-  current_password: string;
-  new_password: string;
-}
-
-/**
- * Modelo para filtros de usuarios
- */
 export interface UsuarioFilters {
-  email?: string;
-  nombre?: string;
-  apellido?: string;
-  activo?: boolean;
-  fecha_desde?: string;
-  fecha_hasta?: string;
+  username?: string;
+  rol?: string;
 }
