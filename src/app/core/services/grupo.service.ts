@@ -1,72 +1,59 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { Grupo, CreateGrupoRequest, GrupoFilters } from 'src/app/shared/models/grupo.model';
-import { PaginatedResponse, ApiResponse } from '../models/api-response.model';
+import { ApiService } from './api.service';
+import { ApiResponse } from '../models/api-response.model';
+import {
+  Grupo,
+  CreateGrupoRequest,
+  UpdateGrupoRequest,
+  GrupoFilters
+} from '../../shared/models/grupo.model';
+import { PaginationParams } from '../models/api-response.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GrupoService {
-  private apiUrl = `${environment.apiUrl}/grupos`;
+  private endpoint = '/grupos/';
 
-  constructor(private http: HttpClient) {}
+  constructor(private apiService: ApiService) { }
 
   /**
-   * ✅ Obtener lista de grupos con paginación y filtros.
+   * Obtener grupos con paginación y filtros
    */
   getGrupos(
-    pagination?: { page: number; limit: number },
+    pagination?: PaginationParams,
     filters?: GrupoFilters
-  ): Observable<PaginatedResponse<Grupo>> {
-    let params = new HttpParams();
-
-    // Paginación
-    if (pagination) {
-      params = params
-        .set('page', pagination.page.toString())
-        .set('limit', pagination.limit.toString());
-    }
-
-    // Filtros
-    if (filters) {
-      Object.keys(filters).forEach(key => {
-        const value = (filters as any)[key];
-        if (value !== null && value !== undefined && value !== '') {
-          params = params.set(key, value);
-        }
-      });
-    }
-
-    return this.http.get<PaginatedResponse<Grupo>>(this.apiUrl, { params });
+  ): Observable<ApiResponse<Grupo[]>> {
+    const params: any = { ...pagination, ...filters };
+    return this.apiService.get<Grupo[]>(this.endpoint, params);
   }
 
   /**
-   * ✅ Obtener un grupo por su ID.
+   *  Obtener un grupo por ID
    */
-  getGrupoById(id: number): Observable<ApiResponse<Grupo>> {
-    return this.http.get<ApiResponse<Grupo>>(`${this.apiUrl}/${id}`);
+  getGrupoById(id_grupo: string): Observable<ApiResponse<Grupo>> {
+    return this.apiService.get<Grupo>(`${this.endpoint}/${id_grupo}`);
   }
 
   /**
-   * ✅ Crear un nuevo grupo.
+   *  Crear un nuevo grupo
    */
-  createGrupo(grupo: CreateGrupoRequest): Observable<ApiResponse<Grupo>> {
-    return this.http.post<ApiResponse<Grupo>>(this.apiUrl, grupo);
+  createGrupo(data: CreateGrupoRequest): Observable<ApiResponse<Grupo>> {
+    return this.apiService.post<Grupo>(this.endpoint, data);
   }
 
   /**
-   * ✅ Actualizar un grupo existente.
+   *  Actualizar un grupo existente
    */
-  updateGrupo(id: number, grupo: Partial<CreateGrupoRequest>): Observable<ApiResponse<Grupo>> {
-    return this.http.put<ApiResponse<Grupo>>(`${this.apiUrl}/${id}`, grupo);
+  updateGrupo(id_grupo: string, data: UpdateGrupoRequest): Observable<ApiResponse<Grupo>> {
+    return this.apiService.put<Grupo>(`${this.endpoint}/${id_grupo}`, data);
   }
 
   /**
-   * ✅ Eliminar un grupo por ID.
+   *  Eliminar un grupo por ID
    */
-  deleteGrupo(id: number): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  deleteGrupo(id_grupo: string): Observable<ApiResponse<void>> {
+    return this.apiService.delete<void>(`${this.endpoint}/${id_grupo}`);
   }
 }
