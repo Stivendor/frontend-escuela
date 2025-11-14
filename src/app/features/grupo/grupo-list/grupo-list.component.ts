@@ -1,14 +1,9 @@
-// src/app/features/grupo/grupo-list/grupo-list.component.ts
-
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
 import { GrupoService } from '../../../core/services/grupo.service';
 import { MateriaService } from '../../../core/services/materia.service';
 import { ProfesorService } from '../../../core/services/profesor.service';
-
 import {
   Grupo,
   CreateGrupoRequest,
@@ -159,8 +154,7 @@ export class GrupoListComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error al cargar materias:', error);
         this.materias = [];
-      },
-      error: (err) => console.error('Error al cargar materias:', err),
+      }
     });
   }
 
