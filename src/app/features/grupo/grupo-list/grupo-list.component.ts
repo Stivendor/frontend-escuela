@@ -1,18 +1,22 @@
+// src/app/features/grupo/grupo-list/grupo-list.component.ts
+
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PaginationParams } from '../../../core/models/api-response.model';
+
 import { GrupoService } from '../../../core/services/grupo.service';
 import { MateriaService } from '../../../core/services/materia.service';
 import { ProfesorService } from '../../../core/services/profesor.service';
+
 import {
   Grupo,
   CreateGrupoRequest,
-  UpdateGrupoRequest,
   GrupoFilters,
 } from '../../../shared/models/grupo.model';
 import { Materia } from '../../../shared/models/materia.model';
 import { Profesor } from '../../../shared/models/profesor.model';
+import { PaginationParams } from '../../../core/models/api-response.model';
 
 @Component({
   selector: 'app-grupo-list',
@@ -22,27 +26,29 @@ import { Profesor } from '../../../shared/models/profesor.model';
   styleUrls: ['./grupo-list.component.scss'],
 })
 export class GrupoListComponent implements OnInit {
+  // Datos
   grupos: Grupo[] = [];
   allGrupos: Grupo[] = []; // 👈 copia completa para filtrado local
   materias: Materia[] = [];
   profesores: Profesor[] = [];
 
+  // Estado UI
   loading = false;
   showModal = false;
   editingGrupo: Grupo | null = null;
 
-  // 🔢 Paginación
+  // Paginación
   currentPage = 1;
   totalPages = 1;
   pageSize = 10;
 
-  // 🔍 Filtros
+  // Filtros
   filters: GrupoFilters = {
     nombre: '',
     activo: undefined,
   };
 
-  // 📋 Formulario
+  // Formulario
   grupoForm: CreateGrupoRequest = {
     nombre: '',
     materia_id: '',
@@ -54,7 +60,7 @@ export class GrupoListComponent implements OnInit {
     private grupoService: GrupoService,
     private materiaService: MateriaService,
     private profesorService: ProfesorService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.loadMaterias();
@@ -63,7 +69,7 @@ export class GrupoListComponent implements OnInit {
   }
 
   // ================================
-  // 🚀 CARGAR GRUPOS
+  // Cargar grupos
   // ================================
   loadGrupos(): void {
     this.loading = true;
@@ -73,42 +79,55 @@ export class GrupoListComponent implements OnInit {
       limit: this.pageSize,
     };
 
-    this.grupoService.getGrupos(pagination, {}).subscribe({
-      next: (response: any) => {
-        console.log('📥 Respuesta cruda grupos:', response);
+    this.grupoService.getGrupos(pagination, this.filters).subscribe({
+      next: (response) => {
+        console.log('📦 Grupos desde backend:', response);
 
-        const data =
-          Array.isArray(response) ? response :
-            response.data ?? response.results ?? response.grupos ?? response;
+        const data = Array.isArray(response)
+          ? response
+          : (response as any)?.data ?? response;
 
-        if (!data || data.length === 0) {
-          console.warn('⚠️ No se recibieron grupos. Cargando ejemplo local.');
+        this.grupos = (data ?? []).map((g: any) => {
+          const id = (g.id || g.id_grupo || '') as string;
+          const materiaId = (g.materia_id || g.materia?.id || '') as string;
+          const profesorId = (g.profesor_id || g.profesor?.id || '') as string;
 
-          ;
-          this.allGrupos = [...this.grupos];
-          this.totalPages = 1;
-          this.loading = false;
-          return;
-        }
+          const materiaEncontrada = this.materias.find(
+            (m) => m.id === materiaId
+          );
+          const profesorEncontrado = this.profesores.find(
+            (p) => p.id === profesorId
+          );
 
-        this.grupos = (data as any[]).map((g: any) => ({
-          id_grupo: g.id ?? g.id_grupo ?? '',
-          nombre: g.nombre ?? g.nombre_grupo ?? '',
-          materia_id: g.materia_id ?? g.materia?.id ?? '',
-          profesor_id: g.profesor_id ?? g.profesor?.id ?? '',
-          activo: g.activo ?? g.is_active ?? true,
-          materia: g.materia
-            ? { id: g.materia.id, nombre: g.materia.nombre }
-            : this.materias.find((m) => m.id === g.materia_id) ?? { id: '', nombre: 'Sin asignar' },
-          profesor: g.profesor
-            ? { id: g.profesor.id, nombre: g.profesor.nombre }
-            : this.profesores.find((p) => p.id === g.profesor_id) ?? { id: '', nombre: 'Sin asignar' },
-        }));
+          const grupo: Grupo = {
+            id,
+            id_grupo: id,
+            nombre: g.nombre || g.nombre_grupo || '',
+            materia_id: materiaId,
+            profesor_id: profesorId,
+            activo:
+              typeof g.activo === 'boolean'
+                ? g.activo
+                : g.is_active !== undefined
+                ? g.is_active
+                : true,
+            materia: materiaEncontrada
+              ? { id: materiaEncontrada.id, nombre: materiaEncontrada.nombre }
+              : g.materia
+              ? { id: g.materia.id, nombre: g.materia.nombre }
+              : { id: '', nombre: 'Sin asignar' },
+            profesor: profesorEncontrado
+              ? { id: profesorEncontrado.id, nombre: profesorEncontrado.nombre }
+              : g.profesor
+              ? { id: g.profesor.id, nombre: g.profesor.nombre }
+              : { id: '', nombre: 'Sin asignar' },
+          };
 
-        this.allGrupos = [...this.grupos];
-        this.totalPages = response.total_pages ?? response.totalPages ?? 1;
+          return grupo;
+        });
+
+        this.totalPages = 1;
         this.loading = false;
-        console.log('✅ Grupos mapeados:', this.grupos);
       },
       error: (error) => {
         console.error('❌ Error al cargar grupos:', error);
@@ -119,40 +138,62 @@ export class GrupoListComponent implements OnInit {
   }
 
   // ================================
-  // 📚 CARGAR MATERIAS Y PROFESORES
+  // Cargar materias
   // ================================
   loadMaterias(): void {
     const pagination: PaginationParams = { page: 1, limit: 100 };
+
     this.materiaService.getMaterias(pagination, {}).subscribe({
       next: (response: any) => {
-        const data = Array.isArray(response) ? response : response.data ?? response;
+        const data = Array.isArray(response)
+          ? response
+          : response?.data ?? response;
+
         this.materias = (data ?? []).map((m: any) => ({
-          id: m.id ?? m.id_materia ?? '',
+          id: m.id_materia ?? m.id ?? '',
           nombre: m.nombre ?? 'Sin nombre',
-        }));
-        console.log('✅ Materias cargadas:', this.materias);
+        })) as Materia[];
+
+        console.log('📘 Materias:', this.materias);
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar materias:', error);
+        this.materias = [];
       },
       error: (err) => console.error('Error al cargar materias:', err),
     });
   }
 
+  // ================================
+  // Cargar profesores
+  // ================================
   loadProfesores(): void {
     const pagination: PaginationParams = { page: 1, limit: 100 };
-    this.profesorService.getProfesores(pagination, {}).subscribe({
-      next: (response: any) => {
-        const data = Array.isArray(response) ? response : response.data ?? response;
-        this.profesores = (data ?? []).map((p: any) => ({
-          id: p.id ?? p.id_profesor ?? '',
-          nombre: p.persona?.nombre ?? p.nombre ?? 'Sin nombre',
-        }));
-        console.log('✅ Profesores cargados:', this.profesores);
-      },
-      error: (err) => console.error('Error al cargar profesores:', err),
-    });
+
+    this.profesorService
+      .getProfesores(pagination, { activo: true })
+      .subscribe({
+        next: (response: any) => {
+          const data = Array.isArray(response)
+            ? response
+            : response?.data ?? response;
+
+          this.profesores = (data ?? []).map((p: any) => ({
+            id: p.id_profesor ?? p.id ?? '',
+            nombre: p.persona?.nombre || p.nombre || '',
+          })) as Profesor[];
+
+          console.log('👨‍🏫 Profesores:', this.profesores);
+        },
+        error: (error) => {
+          console.error('❌ Error al cargar profesores:', error);
+          this.profesores = [];
+        },
+      });
   }
 
   // ================================
-  // 🔍 FILTROS (buscador + activo)
+  // Filtros
   // ================================
   onFilterChange(): void {
     const nombreFiltro = this.filters.nombre?.toLowerCase().trim() || '';
@@ -168,21 +209,11 @@ export class GrupoListComponent implements OnInit {
 
   clearFilters(): void {
     this.filters = { nombre: '', activo: undefined };
-    this.grupos = [...this.allGrupos];
+    this.loadGrupos();
   }
 
   // ================================
-  // 📄 PAGINACIÓN
-  // ================================
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadGrupos();
-    }
-  }
-
-  // ================================
-  // 🧱 MODAL
+  // Modal: crear
   // ================================
   openCreateModal(): void {
     this.editingGrupo = null;
@@ -193,32 +224,44 @@ export class GrupoListComponent implements OnInit {
       activo: true,
     };
     this.showModal = true;
+    console.log('🟢 Modal crear abierto');
   }
 
-  editGrupo(grupo: Grupo): void {
-    this.editingGrupo = grupo;
-    this.grupoForm = {
-      nombre: grupo.nombre,
-      materia_id: grupo.materia_id,
-      profesor_id: grupo.profesor_id,
-      activo: grupo.activo,
+  // ================================
+  // Modal: editar
+  // ================================
+  editGrupo(grupo: any): void {
+    console.log('📝 Editar grupo clickeado:', grupo);
+
+    this.editingGrupo = {
+      id: grupo.id ?? grupo.id_grupo ?? '',
+      id_grupo: grupo.id_grupo ?? grupo.id ?? '',
+      nombre: grupo.nombre || '',
+      materia_id: grupo.materia_id || '',
+      profesor_id: grupo.profesor_id || '',
+      activo: grupo.activo ?? true,
+      materia: grupo.materia,
+      profesor: grupo.profesor,
     };
+
+    this.grupoForm = {
+      nombre: this.editingGrupo.nombre,
+      materia_id: this.editingGrupo.materia_id,
+      profesor_id: this.editingGrupo.profesor_id,
+      activo: this.editingGrupo.activo,
+    };
+
     this.showModal = true;
+    console.log('🟡 Modal editar abierto, showModal =', this.showModal);
   }
 
   closeModal(): void {
     this.showModal = false;
     this.editingGrupo = null;
-    this.grupoForm = {
-      nombre: '',
-      materia_id: '',
-      profesor_id: '',
-      activo: true,
-    };
   }
 
   // ================================
-  // 💾 GUARDAR (crear / actualizar)
+  // Guardar (crear / actualizar)
   // ================================
   saveGrupo(): void {
     if (
@@ -230,57 +273,79 @@ export class GrupoListComponent implements OnInit {
       return;
     }
 
-    const payload = { ...this.grupoForm };
+    const payload: CreateGrupoRequest = { ...this.grupoForm };
+    console.log('📨 Payload a enviar:', payload);
 
+    // EDITAR
     if (this.editingGrupo) {
-      if (!this.editingGrupo.id) {
-        console.error('❌ No se encontró el ID del grupo a editar');
+      const id = this.editingGrupo.id_grupo ?? this.editingGrupo.id;
+
+      if (!id) {
         alert('Error interno: falta el ID del grupo');
         return;
       }
 
-      this.grupoService.updateGrupo(this.editingGrupo.id, payload).subscribe({
-        next: () => {
+      this.grupoService.updateGrupo(id, payload).subscribe({
+        next: (res) => {
+          console.log('✅ Grupo actualizado:', res);
           this.loadGrupos();
           this.closeModal();
         },
         error: (error) => {
           console.error('❌ Error al actualizar grupo:', error);
-          alert('Error al actualizar el grupo');
+          alert(
+            'Error al actualizar grupo: ' +
+              (error.error?.detail ?? 'ver consola')
+          );
         },
       });
-    } else {
-      this.grupoService.createGrupo(payload).subscribe({
-        next: () => {
-          this.loadGrupos();
-          this.closeModal();
-        },
-        error: (error) => {
-          console.error('❌ Error al crear grupo:', error);
-          alert('Error al crear el grupo');
-        },
-      });
+      return;
     }
+
+    // CREAR
+    this.grupoService.createGrupo(payload).subscribe({
+      next: (res) => {
+        console.log('✅ Grupo creado:', res);
+        this.loadGrupos();
+        this.closeModal();
+      },
+      error: (error) => {
+        console.error('❌ Error al crear grupo:', error);
+        alert(
+          'Error al crear grupo: ' +
+            (error.error?.detail ?? 'ver consola')
+        );
+      },
+    });
   }
 
   // ================================
-  // 🗑️ ELIMINAR
+  // Eliminar
   // ================================
   deleteGrupo(grupo: Grupo): void {
-    if (!grupo.id) {
-      console.error('❌ No se encontró el ID del grupo a eliminar');
+    const id = grupo.id_grupo ?? grupo.id;
+
+    if (!id) {
       alert('Error interno: falta el ID del grupo');
       return;
     }
 
-    if (confirm(`¿Está seguro de eliminar el grupo "${grupo.nombre}"?`)) {
-      this.grupoService.deleteGrupo(grupo.id).subscribe({
+    if (confirm(`¿Eliminar el grupo "${grupo.nombre}"?`)) {
+      this.grupoService.deleteGrupo(id).subscribe({
         next: () => this.loadGrupos(),
         error: (error) => {
           console.error('❌ Error al eliminar grupo:', error);
           alert('No se pudo eliminar el grupo');
         },
       });
+    }
+  }
+
+  // Paginación
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadGrupos();
     }
   }
 }

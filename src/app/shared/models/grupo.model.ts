@@ -1,22 +1,18 @@
-/**
- * Representa un grupo académico dentro del sistema.
- */
+// src/app/shared/models/grupo.model.ts
+
 export interface Grupo {
-  id?: string; // opcional para compatibilidad
+  id?: string;
   id_grupo?: string;
+
   nombre: string;
-  materia_id: string;
-  profesor_id: string;
+  materia_id: string;   // UUID
+  profesor_id: string;  // UUID
   activo: boolean;
 
-  // Relaciones opcionales (para mostrar nombres en vez de IDs)
   materia?: MateriaRef;
   profesor?: ProfesorRef;
 }
 
-/**
- * Datos requeridos para crear un nuevo grupo.
- */
 export interface CreateGrupoRequest {
   nombre: string;
   materia_id: string;
@@ -24,9 +20,6 @@ export interface CreateGrupoRequest {
   activo: boolean;
 }
 
-/**
- * Filtros usados en la búsqueda/listado de grupos.
- */
 export interface GrupoFilters {
   nombre?: string;
   materia_id?: string;
@@ -34,15 +27,7 @@ export interface GrupoFilters {
   activo?: boolean | string;
 }
 
-/**
- * Tipos de referencia ligeros para relaciones.
- */
 export interface MateriaRef {
-  id: string;
-  nombre: string;
-}
-
-export interface PeriodoRef {
   id: string;
   nombre: string;
 }
