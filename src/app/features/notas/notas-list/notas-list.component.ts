@@ -254,11 +254,13 @@ editNota(nota: Nota): void {
 
 
   // Si estamos creando una nueva nota
-  else {
+    else {
     const payload = {
       materia_id: this.notaForm.materia_id,
       estudiante_id: this.notaForm.estudiante_id,
-      valor: this.notaForm.valor
+      profesor_id: this.notaForm.profesor_id, // ← ¡AQUÍ ESTÁ LA SOLUCIÓN!
+      valor: this.notaForm.valor,
+      activo: this.notaForm.activo
     };
 
     this.notaService.createNota(payload).subscribe({
@@ -271,10 +273,9 @@ editNota(nota: Nota): void {
         console.error('Error al crear la nota:', error);
         let msg = 'Error al crear la nota';
         if (error?.error?.detail) {
-          msg =
-            typeof error.error.detail === 'string'
-              ? error.error.detail
-              : JSON.stringify(error.error.detail);
+          msg = typeof error.error.detail === 'string'
+            ? error.error.detail
+            : JSON.stringify(error.error.detail);
         }
         alert(msg);
       }

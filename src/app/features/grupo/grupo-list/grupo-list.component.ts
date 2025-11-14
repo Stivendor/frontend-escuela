@@ -2,6 +2,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { GrupoService } from '../../../core/services/grupo.service';
@@ -27,6 +28,7 @@ import { PaginationParams } from '../../../core/models/api-response.model';
 export class GrupoListComponent implements OnInit {
   // Datos
   grupos: Grupo[] = [];
+  allGrupos: Grupo[] = []; // 👈 copia completa para filtrado local
   materias: Materia[] = [];
   profesores: Profesor[] = [];
 
@@ -158,6 +160,7 @@ export class GrupoListComponent implements OnInit {
         console.error('❌ Error al cargar materias:', error);
         this.materias = [];
       },
+      error: (err) => console.error('Error al cargar materias:', err),
     });
   }
 
@@ -193,8 +196,15 @@ export class GrupoListComponent implements OnInit {
   // Filtros
   // ================================
   onFilterChange(): void {
-    this.currentPage = 1;
-    this.loadGrupos();
+    const nombreFiltro = this.filters.nombre?.toLowerCase().trim() || '';
+    const activoFiltro = this.filters.activo;
+
+    this.grupos = this.allGrupos.filter((g) => {
+      const coincideNombre = g.nombre.toLowerCase().includes(nombreFiltro);
+      const coincideActivo =
+        activoFiltro === undefined ? true : g.activo === activoFiltro;
+      return coincideNombre && coincideActivo;
+    });
   }
 
   clearFilters(): void {

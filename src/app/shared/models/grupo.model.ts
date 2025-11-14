@@ -36,3 +36,10 @@ export interface ProfesorRef {
   id: string;
   nombre: string;
 }
+
+/**
+ * Datos usados para actualizar un grupo existente.
+ */
+export interface UpdateGrupoRequest extends CreateGrupoRequest {
+  id?: string; // UUID del grupo
+}
