@@ -20,102 +20,130 @@ import { RouterModule } from '@angular/router';
       </div>
 
       <!-- Modules Grid -->
-      <div class="modules-grid">
-        <div class="module-card slide-in-up" style="animation-delay: 0.1s">
-          <div class="card">
-            <div class="card-body text-center">
-              <div class="module-icon">👨‍🎓</div>
-              <h3 class="module-title">Estudiantes</h3>
-              <p class="module-description">Gestión completa del alumnado</p>
-              <div class="module-features">
-                <span class="feature-tag">Inscripciones</span>
-                <span class="feature-tag">Expedientes</span>
-                <span class="feature-tag">Asistencia</span>
-              </div>
-              <a routerLink="/estudiantes" class="btn btn-primary btn-lg">
-                <span class="btn-icon">📚</span>
-                Gestionar Estudiantes
-              </a>
-            </div>
-          </div>
-        </div>
+<div class="modules-grid">
 
-        <div class="module-card slide-in-up" style="animation-delay: 0.2s">
-          <div class="card">
-            <div class="card-body text-center">
-              <div class="module-icon">👨‍🏫</div>
-              <h3 class="module-title">Profesores</h3>
-              <p class="module-description">Control del personal docente</p>
-              <div class="module-features">
-                <span class="feature-tag">Asignaciones</span>
-                <span class="feature-tag">Horarios</span>
-                <span class="feature-tag">Materias</span>
-              </div>
-              <a routerLink="/profesores" class="btn btn-primary btn-lg">
-                <span class="btn-icon">📋</span>
-                Ver Profesores
-              </a>
-            </div>
-          </div>
+  <!-- Estudiantes -->
+  <div class="module-card slide-in-up" style="animation-delay: 0.1s">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="module-icon">👨‍🎓</div>
+        <h3 class="module-title">Estudiantes</h3>
+        <p class="module-description">Gestión completa del alumnado</p>
+        <div class="module-features">
+          <span class="feature-tag">Inscripciones</span>
+          <span class="feature-tag">Expedientes</span>
+          <span class="feature-tag">Asistencia</span>
         </div>
-
-        <div class="module-card slide-in-up" style="animation-delay: 0.3s">
-          <div class="card">
-            <div class="card-body text-center">
-              <div class="module-icon">📝</div>
-              <h3 class="module-title">Notas</h3>
-              <p class="module-description">Gestión de calificaciones y evaluaciones</p>
-              <div class="module-features">
-                <span class="feature-tag">Calificaciones</span>
-                <span class="feature-tag">Boletines</span>
-                <span class="feature-tag">Promedios</span>
-              </div>
-              <a routerLink="/notas" class="btn btn-primary btn-lg">
-                <span class="btn-icon">📊</span>
-                Gestionar Notas
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <div class="card glass">
-          <div class="card-header">
-            <h3 class="card-title">Acciones Rápidas</h3>
-          </div>
-          <div class="card-body">
-            <div class="actions-grid">
-              <a routerLink="/estudiantes/nuevo" class="action-btn">
-                <span class="action-icon">👨‍🎓</span>
-                <span class="action-text">Nuevo Estudiante</span>
-              </a>
-              <a routerLink="/profesores/nuevo" class="action-btn">
-                <span class="action-icon">👨‍🏫</span>
-                <span class="action-text">Nuevo Profesor</span>
-              </a>
-              <a routerLink="/grupos/nuevo" class="action-btn">
-                <span class="action-icon">👥</span>
-                <span class="action-text">Nuevo Grupo</span>
-              </a>
-              <a routerLink="/materias" class="action-btn">
-                <span class="action-icon">📚</span>
-                <span class="action-text">Materias</span>
-              </a>
-              <a routerLink="/periodos" class="action-btn">
-                <span class="action-icon">📅</span>
-                <span class="action-text">Periodos</span>
-              </a>
-              <a routerLink="/notas/registro" class="action-btn">
-                <span class="action-icon">✏️</span>
-                <span class="action-text">Registrar Notas</span>
-              </a>
-            </div>
-          </div>
-        </div>
+        <a routerLink="/estudiantes" class="btn btn-primary btn-lg">
+          <span class="btn-icon">📚</span>
+          Gestionar Estudiantes
+        </a>
       </div>
     </div>
+  </div>
+
+  <!-- Profesores -->
+  <div class="module-card slide-in-up" style="animation-delay: 0.2s">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="module-icon">👨‍🏫</div>
+        <h3 class="module-title">Profesores</h3>
+        <p class="module-description">Control del personal docente</p>
+        <div class="module-features">
+          <span class="feature-tag">Asignaciones</span>
+          <span class="feature-tag">Horarios</span>
+          <span class="feature-tag">Materias</span>
+        </div>
+        <a routerLink="/profesores" class="btn btn-primary btn-lg">
+          <span class="btn-icon">📋</span>
+          Ver Profesores
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notas -->
+  <div class="module-card slide-in-up" style="animation-delay: 0.3s">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="module-icon">📝</div>
+        <h3 class="module-title">Notas</h3>
+        <p class="module-description">Gestión de calificaciones y evaluaciones</p>
+        <div class="module-features">
+          <span class="feature-tag">Calificaciones</span>
+          <span class="feature-tag">Boletines</span>
+          <span class="feature-tag">Promedios</span>
+        </div>
+        <a routerLink="/notas" class="btn btn-primary btn-lg">
+          <span class="btn-icon">📊</span>
+          Gestionar Notas
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usuarios -->
+  <div class="module-card slide-in-up" style="animation-delay: 0.4s">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="module-icon">🧑‍💼</div>
+        <h3 class="module-title">Usuarios</h3>
+        <p class="module-description">Gestión de usuarios del sistema</p>
+        <div class="module-features">
+          <span class="feature-tag">Roles</span>
+          <span class="feature-tag">Permisos</span>
+          <span class="feature-tag">Cuentas</span>
+        </div>
+        <a routerLink="/usuarios" class="btn btn-primary btn-lg">
+          <span class="btn-icon">👤</span>
+          Gestionar Usuarios
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Materias -->
+  <div class="module-card slide-in-up" style="animation-delay: 0.5s">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="module-icon">📖</div>
+        <h3 class="module-title">Materias</h3>
+        <p class="module-description">Administración de las asignaturas</p>
+        <div class="module-features">
+          <span class="feature-tag">Temario</span>
+          <span class="feature-tag">Horarios</span>
+          <span class="feature-tag">Créditos</span>
+        </div>
+        <a routerLink="/materias" class="btn btn-primary btn-lg">
+          <span class="btn-icon">📚</span>
+          Gestionar Materias
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grupos -->
+  <div class="module-card slide-in-up" style="animation-delay: 0.6s">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="module-icon">👥</div>
+        <h3 class="module-title">Grupos</h3>
+        <p class="module-description">Organización de grupos y secciones</p>
+        <div class="module-features">
+          <span class="feature-tag">Secciones</span>
+          <span class="feature-tag">Horarios</span>
+          <span class="feature-tag">Estudiantes</span>
+        </div>
+        <a routerLink="/grupos" class="btn btn-primary btn-lg">
+          <span class="btn-icon">👨‍👩‍👧‍👦</span>
+          Gestionar Grupos
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
   `,
   styles: [`
     .dashboard {

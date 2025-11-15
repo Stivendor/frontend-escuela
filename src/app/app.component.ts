@@ -1,107 +1,87 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterModule, RouterOutlet } from '@angular/router';
-import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
+import { Component, OnInit } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common'; // <- Esto es clave
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterModule, SidebarComponent],
+  imports: [RouterModule, CommonModule], // <- Agregado CommonModule
   template: `
-    <div class="wrapper">
-      <div class="sidebar" data-color="blue">
-        <app-sidebar></app-sidebar>
-      </div>
-      <div class="main-panel">
-        <div class="content">
-          <router-outlet></router-outlet>
-        </div>
-      </div>
-    </div>
+<header class="app-header">
+  <h1>Escuela</h1>
+
+  <div class="header-buttons">
+    <!-- Botón Volver al Dashboard (solo si está autenticado) -->
+    <button 
+      *ngIf="isLoggedIn" 
+      class="btn-dashboard" 
+      (click)="goToDashboard()">
+      🏠 Dashboard
+    </button>
+
+    <!-- Botón Iniciar/Cerrar Sesión -->
+    <button class="btn-session" (click)="handleSession()">
+      {{ isLoggedIn ? 'Cerrar Sesión' : 'Iniciar Sesión' }}
+    </button>
+  </div>
+</header>
+
+<router-outlet></router-outlet>
   `,
   styles: [`
-    :host {
-      --sidebar-width: 260px;
-      --blue-1: #0b63ff;
-      --blue-2: #0059d6;
-      --panel-bg: #f6f8fb;
-    }
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #3b82f6;
+  color: white;
+}
 
-    .wrapper {
-      display: flex;
-      min-height: 100vh;
-      background: var(--panel-bg);
-      color: #222;
-      font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
 
-    /* Sidebar base (mejor contraste, gradiente azul, separación y ligera profundidad) */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 1000;
-      width: var(--sidebar-width);
-      background: linear-gradient(180deg, rgba(11,99,255,0.98) 0%, rgba(0,89,214,0.95) 100%);
-      box-shadow: 0 10px 30px rgba(3,22,70,0.45);
-      border-right: 1px solid rgba(255,255,255,0.05);
-      backdrop-filter: blur(6px);
-      transition: transform 0.28s ease, box-shadow 0.28s ease;
-    }
+.btn-session, .btn-dashboard {
+  background: white;
+  color: #3b82f6;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
 
-    /* Data-color alternative para casos que dependan del atributo */
-    .sidebar[data-color="blue"] {
-      background: linear-gradient(180deg, #007bff 0%, #0056b3 100%);
-    }
-
-    /* Mejora visual del panel principal para que destaque sobre el sidebar */
-    .main-panel {
-      flex: 1;
-      margin-left: var(--sidebar-width);
-      background: linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%);
-      min-height: 100vh;
-      transition: margin-left 0.28s ease;
-    }
-
-    .content {
-      padding: 24px;
-    }
-
-    /* Ajustes responsivos: ocultar/mostrar sidebar con transición más suave */
-    @media (max-width: 991px) {
-      .sidebar {
-        transform: translate3d(-var(--sidebar-width), 0, 0);
-      }
-
-      .sidebar.show {
-        transform: translate3d(0, 0, 0);
-        box-shadow: 0 20px 40px rgba(3,22,70,0.55);
-      }
-
-      .main-panel {
-        margin-left: 0;
-      }
-    }
-
-    /* Pequeños detalles para enlaces dentro del sidebar (si el componente usa estas clases) */
-    .sidebar .nav li > a {
-      transition: background 0.18s ease, padding-left 0.18s ease, color 0.18s ease;
-    }
-    .sidebar .nav li > a:hover {
-      background: rgba(255,255,255,0.04);
-      padding-left: 12px;
-      color: #ffffff;
-    }
-
-    /* Asegura que el contenido dentro del sidebar no se oculte por scroll en móviles */
-    .sidebar .sidebar-wrapper {
-      height: calc(100vh - 70px);
-      overflow: auto;
-      padding-bottom: 32px;
-    }
+.btn-session:hover, .btn-dashboard:hover {
+  background: #e0f2fe;
+}
   `]
 })
-export class AppComponent {
-  title = 'frontend-angular-clean-architecture';
+export class AppComponent implements OnInit {
+
+  isLoggedIn = false;
+
+  constructor(private authService: AuthService, private router: Router) {}
+
+  ngOnInit(): void {
+    // Mantener estado al refrescar la página
+    this.isLoggedIn = this.authService.isAuthenticated();
+  }
+
+  handleSession() {
+    if (this.isLoggedIn) {
+      this.authService.logout();
+      this.isLoggedIn = false;
+      this.router.navigate(['/auth/login']);
+    } else {
+      this.router.navigate(['/auth/login']);
+    }
+  }
+
+  goToDashboard() {
+    this.router.navigate(['/dashboard']);
+  }
 }

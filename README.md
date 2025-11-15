@@ -104,9 +104,14 @@ src/
 │   ├── features/       # Módulos de funcionalidad
 │   │   ├── auth/       # Login y registro
 │   │   ├── dashboard/  # Panel principal
-│   │   ├── categoria/ # Gestión de categorías
-│   │   ├── producto/  # Gestión de productos
-│   │   └── usuario/    # Gestión de usuarios
+│   │   ├── estudiante/ # Gestión de estudiante
+│   │   ├── grupo/      # Gestión de grupos
+│   │   ├── materia/    # Gestión de materias
+|   |   |── notas/      # Gestión de notas
+|   |   ├── periodo/    # Gestión de periodo -- ya no se usa           
+|   |   |── profesor/   # Gestión de profesor
+|   |   ├── usuario/    # Gestión de usuario
+|   |          
 │   ├── shared/         # Componentes compartidos
 │   │   └── models/     # Modelos compartidos
 │   └── app.component.ts
