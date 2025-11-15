@@ -64,7 +64,7 @@ export class AppComponent implements OnInit {
 
   isLoggedIn = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
   ngOnInit(): void {
     // Mantener estado al refrescar la página
@@ -80,6 +80,7 @@ export class AppComponent implements OnInit {
       this.router.navigate(['/auth/login']);
     }
   }
+
 
   goToDashboard() {
     this.router.navigate(['/dashboard']);
