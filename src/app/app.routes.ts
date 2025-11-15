@@ -1,49 +1,81 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: 'auth/login',
     pathMatch: 'full'
   },
+
+  // Módulo de autenticación (login, register, forgot-password)
+  {
+    path: 'auth',
+    loadChildren: () =>
+      import('./features/auth/auth.routes').then(m => m.authRoutes)
+  },
+
+  // Rutas protegidas
   {
     path: 'dashboard',
-    loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/dashboard/dashboard.component')
+        .then(m => m.DashboardComponent)
   },
   {
     path: 'usuarios',
-    loadComponent: () => import('./features/usuario/usuario-list/usuario-list.component').then(m => m.UsuarioListComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/usuario/usuario-list/usuario-list.component')
+        .then(m => m.UsuarioListComponent)
   },
   {
     path: 'materias',
-    loadComponent: () => import('./features/materia/materia-list/materia-list.component').then(m => m.MateriaListComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/materia/materia-list/materia-list.component')
+        .then(m => m.MateriaListComponent)
   },
   {
     path: 'grupos',
-    loadComponent: () => import('./features/grupo/grupo-list/grupo-list.component').then(m => m.GrupoListComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/grupo/grupo-list/grupo-list.component')
+        .then(m => m.GrupoListComponent)
   },
   {
     path: 'periodos',
-    loadComponent: () => import('./features/periodo/periodo-list/periodo-list.component').then(m => m.PeriodoListComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/periodo/periodo-list/periodo-list.component')
+        .then(m => m.PeriodoListComponent)
   },
   {
     path: 'estudiantes',
-    loadComponent: () => import('./features/estudiante/estudiante-list/estudiante-list.component').then(m => m.EstudianteListComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/estudiante/estudiante-list/estudiante-list.component')
+        .then(m => m.EstudianteListComponent)
   },
   {
     path: 'profesores',
-    loadComponent: () => import('./features/profesor/profesor-list/profesor-list.component').then(m => m.ProfesorListComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/profesor/profesor-list/profesor-list.component')
+        .then(m => m.ProfesorListComponent)
   },
   {
     path: 'notas',
-    loadComponent: () => import('./features/notas/notas-list/notas-list.component').then(m => m.NotasListComponent)
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/notas/notas-list/notas-list.component')
+        .then(m => m.NotasListComponent)
   },
-  {
-    path: 'auth',
-    loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
-  },
+
+  // Cualquier ruta rara → lleva al login
   {
     path: '**',
-    redirectTo: '/dashboard'
+    redirectTo: 'auth/login'
   }
 ];
